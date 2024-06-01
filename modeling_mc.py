@@ -345,8 +345,10 @@ class MixcoderAttention(nn.Module):
         self.indi_query = indi_query
         self.indi_output = indi_output
         if self.indi_query:
+            print("make next token q_proj layer")
             self.next_token_q_proj = nn.Linear(embed_dim, embed_dim, bias=bias)
         if self.indi_output:
+            print("make next token out_proj layer")
             self.next_token_out_proj = nn.Linear(embed_dim, embed_dim, bias=bias)
 
     def _shape(self, tensor: torch.Tensor, seq_len: int, bsz: int):
@@ -916,8 +918,10 @@ class MixcoderDecoderLayer(nn.Module):
 
         #code for proposed methods
         if config.share_self_attention_module:
+            print("shared self attention")
             self.next_token_self_attn = self.self_attn
         else:
+            print("not shared self attention")
             self.next_token_self_attn = MIXCODER_ATTENTION_CLASSES[config._attn_implementation](
                 embed_dim=self.embed_dim,
                 num_heads=config.decoder_attention_heads,
@@ -931,12 +935,14 @@ class MixcoderDecoderLayer(nn.Module):
 
 
         if config.share_ffnn:
+            print("shared ffnn")
             self.next_token_encoder_attn_layer_norm = self.encoder_attn_layer_norm
             self.next_token_fc1 = self.fc1
             self.next_token_fc2 = self.fc2
             self.next_token_final_layer_norm = self.final_layer_norm
             self.next_token_self_attn_layer_norm = self.self_attn_layer_norm
         else:
+            print("not shared ffnn")
             self.next_token_encoder_attn_layer_norm = nn.LayerNorm(self.embed_dim)
             self.next_token_fc1 = nn.Linear(self.embed_dim, config.decoder_ffn_dim)
             self.next_token_fc2 = nn.Linear(config.decoder_ffn_dim, self.embed_dim)
@@ -946,8 +952,10 @@ class MixcoderDecoderLayer(nn.Module):
 
         if config.pass_hidden_to_cross_att:
             if config.share_cross_attention_module:
+                print("shared cross attention")
                 self.cur_token_encoder_attn = self.encoder_attn
             else:
+                print("not shared cross attention")
                 self.cur_token_encoder_attn = MIXCODER_ATTENTION_CLASSES[config._attn_implementation](
                     self.embed_dim,
                     config.decoder_attention_heads,
