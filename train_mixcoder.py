@@ -30,7 +30,13 @@ def set_seed(seed):
 argparser = argparse.ArgumentParser()
 argparser.add_argument("--next_token_type", type=str, default="avg_prev_token", choices=["new_token", "avg_prev_token"])
 argparser.add_argument("--share_self_attention_module", default=False, action="store_true")
+argparser.add_argument("--indi_self_q", default=False, action="store_true")
+argparser.add_argument("--indi_self_out", default=False, action="store_true")
 argparser.add_argument("--share_cross_attention_module", default=False, action="store_true")
+argparser.add_argument("--indi_cross_q", default=False, action="store_true")
+argparser.add_argument("--indi_cross_out", default=False, action="store_true")
+argparser.add_argument("--pass_hidden_to_cross_att", default=False, action="store_true")
+argparser.add_argument("--share_ffnn", default=False, action="store_true")
 argparser.add_argument("--pass_hidden_to_cross_att", default=False, action="store_true")
 
 argparser.add_argument("--data_name", type=str, default="wmt14")
@@ -67,6 +73,12 @@ share_self_attention_module = args.share_self_attention_module
 pass_hidden_to_cross_att = args.pass_hidden_to_cross_att
 max_norm = args.max_norm
 share_cross_attention_module = args.share_cross_attention_module
+indi_self_q = args.indi_self_q
+indi_self_out = args.indi_self_out
+indi_cross_q = args.indi_cross_q
+indi_cross_out = args.indi_cross_out
+share_ffnn = args.share_ffnn
+
 
 if args.baseline:
     save_path = "baseline-" + args.save_path
@@ -77,10 +89,20 @@ else:
     save_path += "-" + next_token_type 
     if share_self_attention_module:
         save_path += "-share_att"
+    if indi_self_q:
+        save_path += "-indi_self_q"
+    if indi_self_out:
+        save_path += "-indi_self_out"
     if share_cross_attention_module:
         save_path += "-share_cross_att"
+    if indi_cross_q:
+        save_path += "-indi_cross_q"
+    if indi_cross_out:
+        save_path += "-indi_cross_out"
     if pass_hidden_to_cross_att:
         save_path += "-hidden_cross_att"
+    if share_ffnn:
+        save_path += "-share_ffnn"
 
 save_path = os.path.join("results", save_path)
 
@@ -169,7 +191,12 @@ else:
                                     next_token_id=next_token_id,
                                     share_self_attention_module=share_self_attention_module,
                                     pass_hidden_to_cross_att=pass_hidden_to_cross_att,
-                                    share_cross_attention_module=share_cross_attention_module
+                                    share_cross_attention_module=share_cross_attention_module,
+                                    indi_self_q=indi_self_q,
+                                    indi_self_out=indi_self_out,
+                                    indi_cross_q=indi_cross_q,
+                                    indi_cross_out=indi_cross_out,
+                                    share_ffnn=share_ffnn
                                     )
                             
     model = MixcoderForConditionalGeneration(config=mixcoder_config)

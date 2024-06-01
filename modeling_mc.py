@@ -172,8 +172,10 @@ class MixcoderConfig(PretrainedConfig):
         share_self_attention_module = False,
         pass_hidden_to_cross_att = False,
         share_cross_attention_module = False,
-        inid_query = False,
-        indi_output = False,
+        inid_self_query = False,
+        indi_self_output = False,
+        indi_cross_query = False,
+        indi_cross_output = False,
         share_ffnn = False,
         **kwargs,
     ):
@@ -203,8 +205,10 @@ class MixcoderConfig(PretrainedConfig):
         self.share_self_attention_module = share_self_attention_module
         self.pass_hidden_to_cross_att = pass_hidden_to_cross_att
         self.share_cross_attention_module = share_cross_attention_module
-        self.indi_query = inid_query
-        self.indi_output = indi_output
+        self.indi_self_query = inid_self_query
+        self.indi_self_output = indi_self_output
+        self.indi_cross_query = indi_cross_query
+        self.indi_cross_output = indi_cross_output
         self.share_ffnn = share_ffnn
 
         super().__init__(
@@ -311,6 +315,8 @@ class MixcoderAttention(nn.Module):
         bias: bool = True,
         is_causal: bool = False,
         config: Optional[MixcoderConfig] = None,
+        indi_query: bool = False,
+        indi_output: bool = False,
     ):
         super().__init__()
         self.config = config
@@ -336,9 +342,11 @@ class MixcoderAttention(nn.Module):
         self.out_proj = nn.Linear(embed_dim, embed_dim, bias=bias)
 
         #code for proposed methods
-        if config.indi_query:
+        self.indi_query = indi_query
+        self.indi_output = indi_output
+        if self.indi_query:
             self.next_token_q_proj = nn.Linear(embed_dim, embed_dim, bias=bias)
-        if config.indi_output:
+        if self.indi_output:
             self.next_token_out_proj = nn.Linear(embed_dim, embed_dim, bias=bias)
 
     def _shape(self, tensor: torch.Tensor, seq_len: int, bsz: int):
@@ -363,7 +371,7 @@ class MixcoderAttention(nn.Module):
         bsz, tgt_len, _ = hidden_states.size()
 
         #code for proposed methods
-        if self.config.indi_query and is_next_token:
+        if self.indi_query and is_next_token:
             hidden_states = self.next_token_q_proj(hidden_states) * self.scaling
         else:
             # get query proj
@@ -467,7 +475,7 @@ class MixcoderAttention(nn.Module):
         # partitioned across GPUs when using tensor-parallelism.
         attn_output = attn_output.reshape(bsz, tgt_len, self.embed_dim)
 
-        if self.config.indi_output and is_next_token:
+        if self.indi_output and is_next_token:
             attn_output = self.next_token_out_proj(attn_output)
         else:
             attn_output = self.out_proj(attn_output)
@@ -917,8 +925,10 @@ class MixcoderDecoderLayer(nn.Module):
                 is_decoder=True,
                 is_causal=True,
                 config=config,
+                indi_query=config.indi_self_query,
+                indi_output=config.indi_self_output,
             )
-        
+
 
         if config.share_ffnn:
             self.next_token_encoder_attn_layer_norm = self.encoder_attn_layer_norm
@@ -944,6 +954,8 @@ class MixcoderDecoderLayer(nn.Module):
                     dropout=config.attention_dropout,
                     is_decoder=True,
                     config=config,
+                    inid_query=config.indi_cross_query,
+                    inid_output=config.indi_cross_output,
                 )
 
     def forward(
