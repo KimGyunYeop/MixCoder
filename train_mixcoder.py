@@ -72,8 +72,8 @@ share_self_attention_module = args.share_self_attention_module
 pass_hidden_to_cross_att = args.pass_hidden_to_cross_att
 max_norm = args.max_norm
 share_cross_attention_module = args.share_cross_attention_module
-indi_self_q = args.indi_self_q
-indi_self_out = args.indi_self_out
+indi_self_query = args.indi_self_q
+indi_self_output = args.indi_self_out
 indi_cross_query = args.indi_cross_q
 indi_cross_output = args.indi_cross_out
 share_ffnn = args.share_ffnn
@@ -88,9 +88,9 @@ else:
     save_path += "-" + next_token_type 
     if share_self_attention_module:
         save_path += "-share_att"
-    if indi_self_q:
+    if indi_self_query:
         save_path += "-indi_self_q"
-    if indi_self_out:
+    if indi_self_output:
         save_path += "-indi_self_out"
     if share_cross_attention_module:
         save_path += "-share_cross_att"
@@ -191,8 +191,8 @@ else:
                                     share_self_attention_module=share_self_attention_module,
                                     pass_hidden_to_cross_att=pass_hidden_to_cross_att,
                                     share_cross_attention_module=share_cross_attention_module,
-                                    indi_self_q=indi_self_q,
-                                    indi_self_out=indi_self_out,
+                                    indi_self_query=indi_self_query,
+                                    indi_self_output=indi_self_output,
                                     indi_cross_query=indi_cross_query,
                                     indi_cross_output=indi_cross_output,
                                     share_ffnn=share_ffnn
