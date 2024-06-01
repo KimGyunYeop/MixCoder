@@ -265,7 +265,7 @@ for E in range(epoch):
                 # result_dict_sacre_bleu_v14[str(cur_step)] = matric_bleu_v14_result
                 
                 os.makedirs(os.path.join(save_path,str(cur_step)), exist_ok=True)
-                model.save_pretrained(os.path.join(save_path,str(cur_step)))
+                model.save_pretrained(os.path.join(save_path,str(cur_step)), safe_serialization=True)
 
                 result_str_dict = dict()
                 for idx,(r,p) in enumerate(zip(refers, preds)):
