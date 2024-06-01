@@ -898,6 +898,8 @@ class MixcoderDecoderLayer(nn.Module):
             is_decoder=True,
             is_causal=True,
             config=config,
+            indi_query=config.indi_self_query,
+            indi_output=config.indi_self_output,
         )
         self.dropout = config.dropout
         self.activation_fn = ACT2FN[config.activation_function]
@@ -910,6 +912,8 @@ class MixcoderDecoderLayer(nn.Module):
             dropout=config.attention_dropout,
             is_decoder=True,
             config=config,
+            indi_query=config.indi_self_query,
+            indi_output=config.indi_self_output,
         )
         self.encoder_attn_layer_norm = nn.LayerNorm(self.embed_dim)
         self.fc1 = nn.Linear(self.embed_dim, config.decoder_ffn_dim)
@@ -929,8 +933,6 @@ class MixcoderDecoderLayer(nn.Module):
                 is_decoder=True,
                 is_causal=True,
                 config=config,
-                indi_query=config.indi_self_query,
-                indi_output=config.indi_self_output,
             )
 
 
@@ -962,8 +964,6 @@ class MixcoderDecoderLayer(nn.Module):
                     dropout=config.attention_dropout,
                     is_decoder=True,
                     config=config,
-                    inid_query=config.indi_cross_query,
-                    inid_output=config.indi_cross_output,
                 )
 
     def forward(
