@@ -171,6 +171,7 @@ class MixcoderConfig(PretrainedConfig):
         next_token_id=None,
         share_self_attention_module = False,
         pass_hidden_to_cross_att = False,
+        share_cross_attention_module = False,
         **kwargs,
     ):
         self.vocab_size = vocab_size
@@ -198,6 +199,7 @@ class MixcoderConfig(PretrainedConfig):
         self.next_token_id = next_token_id
         self.share_self_attention_module = share_self_attention_module
         self.pass_hidden_to_cross_att = pass_hidden_to_cross_att
+        self.share_cross_attention_module = share_cross_attention_module
 
         super().__init__(
             num_labels=num_labels,
@@ -336,6 +338,7 @@ class MixcoderAttention(nn.Module):
         attention_mask: Optional[torch.Tensor] = None,
         layer_head_mask: Optional[torch.Tensor] = None,
         output_attentions: bool = False,
+        is_next_token: bool = False,
     ) -> Tuple[torch.Tensor, Optional[torch.Tensor], Optional[Tuple[torch.Tensor]]]:
         """Input shape: Batch x Time x Channel"""
 
@@ -677,6 +680,7 @@ class MixcoderSdpaAttention(MixcoderAttention):
         attention_mask: Optional[torch.Tensor] = None,
         layer_head_mask: Optional[torch.Tensor] = None,
         output_attentions: bool = False,
+        is_next_token: bool = False,
     ) -> Tuple[torch.Tensor, Optional[torch.Tensor], Optional[Tuple[torch.Tensor]]]:
         """Input shape: Batch x Time x Channel"""
         if output_attentions or layer_head_mask is not None:
@@ -692,6 +696,7 @@ class MixcoderSdpaAttention(MixcoderAttention):
                 attention_mask=attention_mask,
                 layer_head_mask=layer_head_mask,
                 output_attentions=output_attentions,
+                is_next_token=is_next_token,
             )
 
         # if key_value_states are provided this layer is used as a cross-attention layer
@@ -903,6 +908,18 @@ class MixcoderDecoderLayer(nn.Module):
             self.next_token_encoder_attn_layer_norm = nn.LayerNorm(self.embed_dim)
             self.next_token_self_attn_layer_norm = nn.LayerNorm(self.embed_dim)
 
+        if config.pass_hidden_to_cross_att:
+            if config.share_cross_attention_module:
+                self.cur_token_encoder_attn = self.encoder_attn
+            else:
+                self.cur_token_encoder_attn = MIXCODER_ATTENTION_CLASSES[config._attn_implementation](
+                    self.embed_dim,
+                    config.decoder_attention_heads,
+                    dropout=config.attention_dropout,
+                    is_decoder=True,
+                    config=config,
+                )
+
     def forward(
         self,
         hidden_states: torch.Tensor,
@@ -947,6 +964,7 @@ class MixcoderDecoderLayer(nn.Module):
             attention_mask=attention_mask,
             layer_head_mask=layer_head_mask,
             output_attentions=output_attentions,
+            is_next_token=True,
         )
         next_token_hidden_states = nn.functional.dropout(next_token_hidden_states, p=self.dropout, training=self.training)
         next_token_hidden_states = next_token_residual + next_token_hidden_states
@@ -991,6 +1009,7 @@ class MixcoderDecoderLayer(nn.Module):
                 layer_head_mask=cross_attn_layer_head_mask,
                 past_key_value=cross_attn_past_key_value,
                 output_attentions=output_attentions,
+                is_next_token=True,
             )
             next_token_hidden_states = nn.functional.dropout(next_token_hidden_states, p=self.dropout, training=self.training)
             next_token_hidden_states = next_token_residual + next_token_hidden_states
@@ -1008,7 +1027,7 @@ class MixcoderDecoderLayer(nn.Module):
 
                 # cross_attn cached key/values tuple is at positions 3,4 of present_key_value tuple
                 cross_attn_past_key_value = past_key_value[-2:] if past_key_value is not None else None
-                hidden_states, cross_attn_weights, cross_attn_present_key_value = self.encoder_attn(
+                hidden_states, cross_attn_weights, cross_attn_present_key_value = self.cur_token_encoder_attn(
                     hidden_states=hidden_states,
                     key_value_states=encoder_hidden_states,
                     attention_mask=encoder_attention_mask,
@@ -1660,6 +1679,10 @@ class MixcoderDecoder(MixcoderPreTrainedModel):
         positions = positions.to(inputs_embeds.device)
         
         #code for proposed methods
+        next_token_positions = self.embed_positions(input, past_key_values_length+1)
+        next_token_positions = next_token_positions.to(inputs_embeds.device)
+
+
         if self.config.next_token_type == "new_token":
             new_token_ids = torch.ones(inputs_embeds.size()[:-1], dtype=torch.long, device=inputs_embeds.device) * self.config.next_token_id
             next_token_hidden_embeds = self.embed_tokens(new_token_ids) * self.embed_scale
@@ -1686,7 +1709,7 @@ class MixcoderDecoder(MixcoderPreTrainedModel):
         hidden_states = self.layernorm_embedding(hidden_states)
         hidden_states = nn.functional.dropout(hidden_states, p=self.dropout, training=self.training)
 
-        next_token_hidden_state = next_token_hidden_embeds + positions
+        next_token_hidden_state = next_token_hidden_embeds + next_token_positions
         next_token_hidden_state = self.layernorm_embedding(next_token_hidden_state)
         next_token_hidden_state = nn.functional.dropout(next_token_hidden_state, p=self.dropout, training=self.training)
 
