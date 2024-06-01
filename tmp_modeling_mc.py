@@ -172,9 +172,6 @@ class MixcoderConfig(PretrainedConfig):
         share_self_attention_module = False,
         pass_hidden_to_cross_att = False,
         share_cross_attention_module = False,
-        inid_query = False,
-        indi_output = False,
-        share_ffnn = False,
         **kwargs,
     ):
         self.vocab_size = vocab_size
@@ -203,9 +200,6 @@ class MixcoderConfig(PretrainedConfig):
         self.share_self_attention_module = share_self_attention_module
         self.pass_hidden_to_cross_att = pass_hidden_to_cross_att
         self.share_cross_attention_module = share_cross_attention_module
-        self.indi_query = inid_query
-        self.indi_output = indi_output
-        self.share_ffnn = share_ffnn
 
         super().__init__(
             num_labels=num_labels,
@@ -313,7 +307,6 @@ class MixcoderAttention(nn.Module):
         config: Optional[MixcoderConfig] = None,
     ):
         super().__init__()
-        self.config = config
         self.embed_dim = embed_dim
         self.num_heads = num_heads
         self.dropout = dropout
@@ -332,14 +325,7 @@ class MixcoderAttention(nn.Module):
         self.k_proj = nn.Linear(embed_dim, embed_dim, bias=bias)
         self.v_proj = nn.Linear(embed_dim, embed_dim, bias=bias)
         self.q_proj = nn.Linear(embed_dim, embed_dim, bias=bias)
-
         self.out_proj = nn.Linear(embed_dim, embed_dim, bias=bias)
-
-        #code for proposed methods
-        if config.indi_query:
-            self.next_token_q_proj = nn.Linear(embed_dim, embed_dim, bias=bias)
-        if config.indi_output:
-            self.next_token_out_proj = nn.Linear(embed_dim, embed_dim, bias=bias)
 
     def _shape(self, tensor: torch.Tensor, seq_len: int, bsz: int):
         return tensor.view(bsz, seq_len, self.num_heads, self.head_dim).transpose(1, 2).contiguous()
@@ -362,14 +348,8 @@ class MixcoderAttention(nn.Module):
 
         bsz, tgt_len, _ = hidden_states.size()
 
-        #code for proposed methods
-        if self.config.indi_query and is_next_token:
-            hidden_states = self.next_token_q_proj(hidden_states) * self.scaling
-        else:
-            # get query proj
-            query_states = self.q_proj(hidden_states) * self.scaling
-
-
+        # get query proj
+        query_states = self.q_proj(hidden_states) * self.scaling
         # get key, value proj
         # `past_key_value[0].shape[2] == key_value_states.shape[1]`
         # is checking that the `sequence_length` of the `past_key_value` is the same as
@@ -467,10 +447,7 @@ class MixcoderAttention(nn.Module):
         # partitioned across GPUs when using tensor-parallelism.
         attn_output = attn_output.reshape(bsz, tgt_len, self.embed_dim)
 
-        if self.config.indi_output and is_next_token:
-            attn_output = self.next_token_out_proj(attn_output)
-        else:
-            attn_output = self.out_proj(attn_output)
+        attn_output = self.out_proj(attn_output)
 
         return attn_output, attn_weights_reshaped, past_key_value
 
@@ -909,6 +886,11 @@ class MixcoderDecoderLayer(nn.Module):
         #code for proposed methods
         if config.share_self_attention_module:
             self.next_token_self_attn = self.self_attn
+            self.next_token_encoder_attn_layer_norm = self.encoder_attn_layer_norm
+            self.next_token_fc1 = self.fc1
+            self.next_token_fc2 = self.fc2
+            self.next_token_final_layer_norm = self.final_layer_norm
+            self.next_token_self_attn_layer_norm = self.self_attn_layer_norm
         else:
             self.next_token_self_attn = MIXCODER_ATTENTION_CLASSES[config._attn_implementation](
                 embed_dim=self.embed_dim,
@@ -918,15 +900,7 @@ class MixcoderDecoderLayer(nn.Module):
                 is_causal=True,
                 config=config,
             )
-        
-
-        if config.share_ffnn:
-            self.next_token_encoder_attn_layer_norm = self.encoder_attn_layer_norm
-            self.next_token_fc1 = self.fc1
-            self.next_token_fc2 = self.fc2
-            self.next_token_final_layer_norm = self.final_layer_norm
-            self.next_token_self_attn_layer_norm = self.self_attn_layer_norm
-        else:
+            
             self.next_token_encoder_attn_layer_norm = nn.LayerNorm(self.embed_dim)
             self.next_token_fc1 = nn.Linear(self.embed_dim, config.decoder_ffn_dim)
             self.next_token_fc2 = nn.Linear(config.decoder_ffn_dim, self.embed_dim)
