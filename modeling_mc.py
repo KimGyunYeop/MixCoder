@@ -739,7 +739,10 @@ class MixcoderSdpaAttention(MixcoderAttention):
         bsz, tgt_len, _ = hidden_states.size()
 
         # get query proj
-        query_states = self.q_proj(hidden_states)
+        if self.indi_query and is_next_token:
+            query_states = self.next_token_q_proj(hidden_states)
+        else:
+            query_states = self.q_proj(hidden_states)
         # get key, value proj
         # `past_key_value[0].shape[2] == key_value_states.shape[1]`
         # is checking that the `sequence_length` of the `past_key_value` is the same as
@@ -803,7 +806,10 @@ class MixcoderSdpaAttention(MixcoderAttention):
         # partitioned across GPUs when using tensor-parallelism.
         attn_output = attn_output.reshape(bsz, tgt_len, self.embed_dim)
 
-        attn_output = self.out_proj(attn_output)
+        if self.indi_output and is_next_token:
+            attn_output = self.next_token_out_proj(attn_output)
+        else:
+            attn_output = self.out_proj(attn_output)
 
         return attn_output, None, past_key_value
 
