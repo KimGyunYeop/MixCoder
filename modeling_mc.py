@@ -340,8 +340,7 @@ class MixcoderAttention(nn.Module):
         self.q_proj = nn.Linear(embed_dim, embed_dim, bias=bias)
 
         self.out_proj = nn.Linear(embed_dim, embed_dim, bias=bias)
-        
-        print(indi_query, indi_output)
+
         #code for proposed methods
         self.indi_query = indi_query
         self.indi_output = indi_output
@@ -892,7 +891,6 @@ class MixcoderDecoderLayer(nn.Module):
         self.config = config
         self.embed_dim = config.d_model
 
-        print(config)
         self.self_attn = MIXCODER_ATTENTION_CLASSES[config._attn_implementation](
             embed_dim=self.embed_dim,
             num_heads=config.decoder_attention_heads,

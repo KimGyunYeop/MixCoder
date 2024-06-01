@@ -74,8 +74,8 @@ max_norm = args.max_norm
 share_cross_attention_module = args.share_cross_attention_module
 indi_self_q = args.indi_self_q
 indi_self_out = args.indi_self_out
-indi_cross_q = args.indi_cross_q
-indi_cross_out = args.indi_cross_out
+indi_cross_query = args.indi_cross_q
+indi_cross_output = args.indi_cross_out
 share_ffnn = args.share_ffnn
 
 
@@ -94,9 +94,9 @@ else:
         save_path += "-indi_self_out"
     if share_cross_attention_module:
         save_path += "-share_cross_att"
-    if indi_cross_q:
+    if indi_cross_query:
         save_path += "-indi_cross_q"
-    if indi_cross_out:
+    if indi_cross_output:
         save_path += "-indi_cross_out"
     if pass_hidden_to_cross_att:
         save_path += "-hidden_cross_att"
@@ -193,8 +193,8 @@ else:
                                     share_cross_attention_module=share_cross_attention_module,
                                     indi_self_q=indi_self_q,
                                     indi_self_out=indi_self_out,
-                                    indi_cross_q=indi_cross_q,
-                                    indi_cross_out=indi_cross_out,
+                                    indi_cross_query=indi_cross_query,
+                                    indi_cross_output=indi_cross_output,
                                     share_ffnn=share_ffnn
                                     )
                             
