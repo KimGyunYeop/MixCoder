@@ -20,8 +20,8 @@ class WmtDataset(Dataset):
         src = [item[self.src_lang] for item in batch]
         tgt = [item[self.tgt_lang] for item in batch]
 
-        src_token = self.tokenizer(src, return_tensors="pt", padding=True, truncation=True, max_length=512)
-        tgt_token = self.tokenizer(tgt, return_tensors="pt", padding=True, truncation=True, max_length=512)
+        src_token = self.tokenizer(src, return_tensors="pt", padding=True, truncation=True, max_length=500)
+        tgt_token = self.tokenizer(tgt, return_tensors="pt", padding=True, truncation=True, max_length=500)
 
         labels = torch.where(tgt_token["input_ids"] == self.tokenizer.pad_token_id, -100, tgt_token["input_ids"])
         

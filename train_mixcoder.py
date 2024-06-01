@@ -112,7 +112,7 @@ dataset = load_dataset(data_name, subset)
 print("before filtering:")
 print(dataset)
 
-dataset = dataset.filter(lambda x: len(x["translation"]["en"]) < 768 and len(x["translation"]["de"]) < 768)
+dataset = dataset.filter(lambda x: len(x["translation"]["en"]) < 1024 and len(x["translation"]["de"]) < 1024)
 print("after filtering:")
 print(dataset)
 
