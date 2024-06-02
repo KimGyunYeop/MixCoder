@@ -3,12 +3,24 @@ from datasets import load_dataset
 import os
 from tqdm import tqdm
 
+# data_name = "wmt14"
+# subset = "de-en"
+# src_lang = "en"
+# tgt_lang = "de"
+
+# data_name = "wmt16"
+# subset = "ro-en"
+# src_lang = "ro"
+# tgt_lang = "en"
+
 data_name = "wmt14"
-subset = "de-en"
+subset = "fr-en"
+src_lang = "en"
+tgt_lang = "fr"
 
 def to_list_casting(data):
-    data["en"] = wmt14["train"]["translation"]["en"]
-    data["de"] = wmt14["train"]["translation"]["de"]
+    data[src_lang] = wmt14["train"]["translation"][src_lang]
+    data[tgt_lang] = wmt14["train"]["translation"][tgt_lang]
     return data
 
 # Load the WMT14 en-de dataset
@@ -16,8 +28,8 @@ wmt14 = load_dataset(data_name, subset)
 
 data = []
 for i in tqdm(range(len(wmt14["train"]["translation"]))):
-    data.append(wmt14["train"][i]["translation"]["en"])
-    data.append(wmt14["train"][i]["translation"]["de"])
+    data.append(wmt14["train"][i]["translation"][src_lang])
+    data.append(wmt14["train"][i]["translation"][tgt_lang])
 
 # wmt14 = wmt14.map(to_list_casting, num_proc=4)
 # print(wmt14)
