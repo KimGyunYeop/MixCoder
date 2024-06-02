@@ -1,11 +1,11 @@
 #bin/bash
 
 python -u train_mixcoder.py \
-        --data_name wmt16 \
-        --subset ro-en \
-        --src_lang ro \
-        --tgt_lang en \
-        --tokenizer_path tokenizer/wmt16_ro-en_BPEtokenizer.json \
+        --data_name wmt14 \
+        --subset fr-en \
+        --src_lang en \
+        --tgt_lang fr \
+        --tokenizer_path tokenizer/wmt14_fr-en_BPEtokenizer.json \
         --next_token_type avg_prev_token \
         --share_self_attention_module \
         --indi_self_q \

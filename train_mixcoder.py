@@ -40,6 +40,8 @@ argparser.add_argument("--share_ffnn", default=False, action="store_true")
 
 argparser.add_argument("--data_name", type=str, default="wmt14")
 argparser.add_argument("--subset", type=str, default="de-en")
+argparser.add_argument("--src_lang", type=str, default="en")
+argparser.add_argument("--tgt_lang", type=str, default="de")
 argparser.add_argument("--batch_size", type=int, default=16)
 argparser.add_argument("--tokenizer_path", type=str, default="tokenizer/wmt14_de-en_BPEtokenizer.json")
 argparser.add_argument("--gpu", type=int, default=0)
@@ -103,7 +105,7 @@ else:
     if share_ffnn:
         save_path += "-share_ffnn"
 
-save_path = os.path.join("results", save_path)
+save_path = os.path.join("results",f"{args.data_name}_{args.src_lang}-{args.tgt_lang}", save_path)
 
 # if os.path.exists(save_path):
 #     input("this path already exists. press enter to continue.")
@@ -111,7 +113,7 @@ save_path = os.path.join("results", save_path)
 os.makedirs(save_path, exist_ok=True)
 json.dump(vars(args), open(os.path.join(save_path, "args.json"), "w", encoding="utf8"), indent=2)
 
-wandb.init(project="MixCoder_0601", name=save_path, config=vars(args))
+wandb.init(project=f"MixCoder_{args.data_name}_{args.subset}", name=save_path, config=vars(args))
 
 # data_name = "wmt14"
 # subset = "de-en"
@@ -133,7 +135,7 @@ dataset = load_dataset(data_name, subset)
 print("before filtering:")
 print(dataset)
 
-dataset = dataset.filter(lambda x: len(x["translation"]["en"]) < 1024 and len(x["translation"]["de"]) < 1024)
+dataset = dataset.filter(lambda x: len(x["translation"][args.src_lang]) < 1024 and len(x["translation"][args.tgt_lang]) < 1024)
 print("after filtering:")
 print(dataset)
 
@@ -207,9 +209,9 @@ else:
 
 print(model)
 
-train_dataset = custom_datasets.WmtDataset(dataset["train"], tokenizer=tokenizer, src_lang="en", tgt_lang="de")
-val_dataset = custom_datasets.WmtDataset(dataset["validation"], tokenizer=tokenizer, src_lang="en", tgt_lang="de")
-test_dataset = custom_datasets.WmtDataset(dataset["test"], tokenizer=tokenizer, src_lang="en", tgt_lang="de")
+train_dataset = custom_datasets.WmtDataset(dataset["train"], tokenizer=tokenizer, src_lang=args.src_lang, tgt_lang=args.tgt_lang)
+val_dataset = custom_datasets.WmtDataset(dataset["validation"], tokenizer=tokenizer, src_lang=args.src_lang, tgt_lang=args.tgt_lang)
+test_dataset = custom_datasets.WmtDataset(dataset["test"], tokenizer=tokenizer, src_lang=args.src_lang, tgt_lang=args.tgt_lang)
 
 train_dataloader = torch.utils.data.DataLoader(train_dataset, batch_size=batch_size, collate_fn=train_dataset.collate_fn, num_workers=4, shuffle=True, drop_last=True)
 val_dataloader = torch.utils.data.DataLoader(val_dataset, batch_size=1, collate_fn=val_dataset.collate_fn, drop_last=True)
