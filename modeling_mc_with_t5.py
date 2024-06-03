@@ -1356,7 +1356,8 @@ class T5Stack(T5PreTrainedModel):
                 next_token_mask = next_token_mask / (nex_token_mask_cond + 1).unsqueeze(-1)
                 
                 next_token_hidden_embeds = next_token_mask[None, :, :] @ inputs_embeds.clone()
-                next_token_hidden_states = self.dropout(next_token_hidden_embeds)
+                
+            next_token_hidden_states = self.dropout(next_token_hidden_embeds)
         else:
             next_token_hidden_states = None
 
