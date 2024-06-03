@@ -374,7 +374,7 @@ class MixcoderAttention(nn.Module):
 
         #code for proposed methods
         if self.indi_query and is_next_token:
-            hidden_states = self.next_token_q_proj(hidden_states) * self.scaling
+            query_states = self.next_token_q_proj(hidden_states) * self.scaling
         else:
             # get query proj
             query_states = self.q_proj(hidden_states) * self.scaling
