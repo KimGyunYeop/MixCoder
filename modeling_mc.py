@@ -1736,7 +1736,6 @@ class MixcoderDecoder(MixcoderPreTrainedModel):
         next_token_positions = self.embed_positions(input, past_key_values_length+1)
         next_token_positions = next_token_positions.to(inputs_embeds.device)
 
-
         if self.config.next_token_type == "new_token":
             new_token_ids = torch.ones(inputs_embeds.size()[:-1], dtype=torch.long, device=inputs_embeds.device) * self.config.next_token_id
             next_token_hidden_embeds = self.embed_tokens(new_token_ids) * self.embed_scale

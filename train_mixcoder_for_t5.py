@@ -1,13 +1,10 @@
 import datasets
 # from transformers import BartModel, BartConfig, BartForConditionalGeneration, BertModel
-from transformers import AdamW, get_scheduler, BartConfig, BartForConditionalGeneration, BartTokenizer
+from transformers import AdamW, get_scheduler
 import torch
 from datasets import load_dataset
 import custom_datasets
 import custom_tokenizer
-# from modeling_mixcoder import MixCoderForConditionalGeneration, MixCoderConfig
-# from modeling_mc import BartForConditionalGeneration, BartConfig
-from modeling_mc import MixcoderForConditionalGeneration, MixcoderConfig
 import evaluate
 
 from tqdm import tqdm
@@ -151,7 +148,7 @@ os.makedirs(save_path, exist_ok=True)
 json.dump(vars(args), open(os.path.join(save_path, "args.json"), "w", encoding="utf8"), indent=2)
 
 # wandb.log({"loss":np.mean(logging_losses), "_step":cur_step, "BLEU":matric_bleu_result["bleu"], "sacreBLEU":matric_scarebleu_result["score"], "sacreBLEU_v14":matric_scarebleu_v14_result["score"]})
-wandb.init(project=f"MixCoder_{args.data_name}_{args.subset}", name=save_path, config=vars(args))
+wandb.init(project=f"MixCoder_T5_{args.data_name}_{args.subset}", name=save_path, config=vars(args))
 wandb.define_metric("BLEU", summary="max")
 wandb.define_metric("sacreBLEU", summary="max")
 wandb.define_metric("sacreBLEU_v14", summary="max")
@@ -181,66 +178,61 @@ print(dataset)
 
 
 if args.baseline:
+    from transformers import T5Config, T5ForConditionalGeneration
     tokenizer = custom_tokenizer.get_tokenizer(tokenizer_path)
-    bartconfig = BartConfig(n_layer=6,
+    bartconfig = T5Config(num_layers=6,
                             d_model=512,
-                            decoder_attention_heads=8,
-                            decoder_ffn_dim=2048,
-                            encoder_attention_heads=8,
-                            encoder_ffn_dim=2048,
+                            num_heads=8,
+                            d_ff=2048,
+                            d_kv=64,
                             pad_token_id=tokenizer.pad_token_id, 
                             eos_token_id=tokenizer.eos_token_id, 
-                            bos_token_id=tokenizer.bos_token_id, 
                             decoder_start_token_id=tokenizer.eos_token_id, 
                             is_encoder_decoder=True, 
-                            forced_bos_token_id=tokenizer.bos_token_id, 
-                            forced_eos_token_id=tokenizer.eos_token_id, 
                             vocab_size=len(tokenizer),
                             )
 
-    model = BartForConditionalGeneration(config=bartconfig)
+    model = T5ForConditionalGeneration(config=bartconfig)
     model.to(device)
 
 elif args.pre_trained_baseline:
-    tokenizer = BartTokenizer.from_pretrained("facebook/bart-base")
-    model = BartForConditionalGeneration.from_pretrained("facebook/bart-base")
+    from transformers import T5Config, T5ForConditionalGeneration, T5Tokenizer
+    tokenizer = T5Tokenizer.from_pretrained("facebook/bart-base")
+    model = T5ForConditionalGeneration.from_pretrained("facebook/bart-base")
     model.to(device)
 
 else:
-    tokenizer = custom_tokenizer.get_tokenizer(tokenizer_path)
+    tokenizer = custom_tokenizer.get_tokenizer_for_t5(tokenizer_path)
     if next_token_type == "new_token":
         tokenizer.add_tokens("<next>", special_tokens=True)
         next_token_id = tokenizer.convert_tokens_to_ids("<next>")
     else:
         next_token_id = None
 
-    mixcoder_config = MixcoderConfig(n_layer=6,
-                                    d_model=512,
-                                    decoder_attention_heads=8,
-                                    decoder_ffn_dim=2048,
-                                    encoder_attention_heads=8,
-                                    encoder_ffn_dim=2048,
-                                    pad_token_id=tokenizer.pad_token_id, 
-                                    eos_token_id=tokenizer.eos_token_id, 
-                                    bos_token_id=tokenizer.bos_token_id, 
-                                    decoder_start_token_id=tokenizer.eos_token_id, 
-                                    is_encoder_decoder=True, 
-                                    forced_bos_token_id=tokenizer.bos_token_id, 
-                                    forced_eos_token_id=tokenizer.eos_token_id, 
-                                    vocab_size=len(tokenizer),
-                                    next_token_type=next_token_type,
-                                    next_token_id=next_token_id,
-                                    share_self_attention_module=share_self_attention_module,
-                                    pass_hidden_to_cross_att=pass_hidden_to_cross_att,
-                                    share_cross_attention_module=share_cross_attention_module,
-                                    indi_self_query=indi_self_query,
-                                    indi_self_output=indi_self_output,
-                                    indi_cross_query=indi_cross_query,
-                                    indi_cross_output=indi_cross_output,
-                                    share_ffnn=share_ffnn
-                                    )
+    from modeling_mc_with_t5 import T5ForConditionalGeneration, T5Config
+    t5_config = T5Config(num_layers=6,
+                            d_model=512,
+                            num_heads=8,
+                            d_ff=2048,
+                            d_kv=64,
+                            pad_token_id=tokenizer.pad_token_id, 
+                            eos_token_id=tokenizer.eos_token_id, 
+                            decoder_start_token_id=tokenizer.eos_token_id, 
+                            is_encoder_decoder=True, 
+                            vocab_size=len(tokenizer),
+                            next_token_type=next_token_type,
+                            next_token_id=next_token_id,
+                            share_self_attention_module=share_self_attention_module,
+                            pass_hidden_to_cross_att=pass_hidden_to_cross_att,
+                            share_cross_attention_module=share_cross_attention_module,
+                            indi_self_query=indi_self_query,
+                            indi_self_output=indi_self_output,
+                            indi_cross_query=indi_cross_query,
+                            indi_cross_output=indi_cross_output,
+                            share_ffnn=share_ffnn
+                            )
                             
-    model = MixcoderForConditionalGeneration(config=mixcoder_config)
+    model = T5ForConditionalGeneration(config=t5_config)
 
     if next_token_type == "new_token":
         model.resize_token_embeddings(len(tokenizer))
@@ -248,6 +240,8 @@ else:
     model.to(device)
 
 print(model)
+with open(os.path.join(save_path, "model.txt"), "w", encoding="utf8") as f:
+    f.write(str(model))
 
 train_dataset = custom_datasets.WmtDataset(dataset["train"], tokenizer=tokenizer, src_lang=args.src_lang, tgt_lang=args.tgt_lang)
 val_dataset = custom_datasets.WmtDataset(dataset["validation"], tokenizer=tokenizer, src_lang=args.src_lang, tgt_lang=args.tgt_lang)
@@ -381,7 +375,7 @@ with torch.no_grad():
         for i in batch.keys():
             batch[i] = batch[i].to(device)
 
-        out = model.generate(input_ids=batch["input_ids"], attention_mask=batch["attention_mask"], use_cache=False, num_beams=4, do_sample=True, max_new_tokens=512)
+        out = model.generate(input_ids=batch["input_ids"], attention_mask=batch["attention_mask"], use_cache=False, num_beams=4, do_sample=True, max_new_tokens=512, length_penalty=0.6)
         print(out)
         pred_str = tokenizer.batch_decode(out, skip_special_tokens=True)
         print(pred_str)
