@@ -177,6 +177,7 @@ class MixcoderConfig(PretrainedConfig):
         indi_cross_query = False,
         indi_cross_output = False,
         share_ffnn = False,
+        generate_mode = False,
         **kwargs,
     ):
         self.vocab_size = vocab_size
@@ -210,6 +211,7 @@ class MixcoderConfig(PretrainedConfig):
         self.indi_cross_query = indi_cross_query
         self.indi_cross_output = indi_cross_output
         self.share_ffnn = share_ffnn
+        self.generate_mode = generate_mode
 
         super().__init__(
             num_labels=num_labels,

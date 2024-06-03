@@ -3,8 +3,8 @@ from transformers import BartTokenizer, BartForConditionalGeneration
 
 
 def beam_search(model, tokenizer, input_text, beam_size=3, max_length=50):
-    input_ids = tokenizer.encode(input_text, return_tensors='pt')
-    input_ids = input_ids.to(model.device)
+    input_data = tokenizer(input_text, return_tensors='pt')
+    input_ids = input_data["input_ids"].to(model.device)
 
     # Initialize the beam with the input text
     beams = [{'input_ids': input_ids, 'score': 0.0}]
