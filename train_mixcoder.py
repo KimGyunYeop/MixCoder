@@ -184,8 +184,10 @@ if args.baseline:
     tokenizer = custom_tokenizer.get_tokenizer(tokenizer_path)
     bartconfig = BartConfig(n_layer=6,
                             d_model=512,
+                            decoder_layers=6,
                             decoder_attention_heads=8,
                             decoder_ffn_dim=2048,
+                            encoder_layers=6,
                             encoder_attention_heads=8,
                             encoder_ffn_dim=2048,
                             pad_token_id=tokenizer.pad_token_id, 
