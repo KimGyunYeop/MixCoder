@@ -210,11 +210,13 @@ elif args.pre_trained_baseline:
 
 else:
     tokenizer = custom_tokenizer.get_tokenizer(tokenizer_path)
+    print(len(tokenizer))
     if next_token_type == "new_token":
         tokenizer.add_tokens("<next>", special_tokens=True)
         next_token_id = tokenizer.convert_tokens_to_ids("<next>")
     else:
         next_token_id = None
+    print(len(tokenizer))
 
     mixcoder_config = MixcoderConfig(n_layer=6,
                                     d_model=512,
@@ -252,6 +254,8 @@ else:
     model.to(device)
 
 print(model)
+with open(os.path.join(save_path, "model.txt"), "w", encoding="utf8") as f:
+    f.write(str(model))
 
 train_dataset = custom_datasets.WmtDataset(dataset["train"], tokenizer=tokenizer, src_lang=args.src_lang, tgt_lang=args.tgt_lang)
 val_dataset = custom_datasets.WmtDataset(dataset["validation"], tokenizer=tokenizer, src_lang=args.src_lang, tgt_lang=args.tgt_lang)
