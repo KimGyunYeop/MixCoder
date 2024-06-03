@@ -139,7 +139,7 @@ else:
     if share_ffnn:
         save_path += "-share_ffnn"
 
-save_path = os.path.join("results",f"{args.data_name}_{args.src_lang}-{args.tgt_lang}", save_path)
+save_path = os.path.join("results_t5",f"{args.data_name}_{args.src_lang}-{args.tgt_lang}", save_path)
 
 # if os.path.exists(save_path):
 #     input("this path already exists. press enter to continue.")
