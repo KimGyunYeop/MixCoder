@@ -37,6 +37,7 @@ argparser.add_argument("--indi_cross_out", default=False, action="store_true")
 argparser.add_argument("--pass_hidden_to_cross_att", default=False, action="store_true")
 argparser.add_argument("--share_ffnn", default=False, action="store_true")
 argparser.add_argument("--setting", type=str, default=None)
+argparser.add_argument("--base", default=False, action="store_true")
 
 argparser.add_argument("--data_name", type=str, default="wmt14")
 argparser.add_argument("--subset", type=str, default="de-en")
