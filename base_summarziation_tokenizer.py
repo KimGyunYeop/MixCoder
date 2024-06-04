@@ -7,7 +7,7 @@ data_name = "xsum"
 
 DATA_INFO = {
     "cnn_dailymail": {"data_path":"abisee/cnn_dailymail","subset":"3.0.0","src_lang":"article", "tgt_lang":"highlights"},
-    "xsum": {"data_name":"EdinburghNLP/xsum","subset":None,"src_lang":"document", "tgt_lang":"summary"},
+    "xsum": {"data_path":"EdinburghNLP/xsum","subset":None,"src_lang":"document", "tgt_lang":"summary"},
 }
 
 data_path = DATA_INFO[data_name]["data_path"]
