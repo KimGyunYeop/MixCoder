@@ -119,8 +119,6 @@ pre_train_path = args.pre_train_path
 
 if args.baseline:
     save_path = "baseline-" + args.save_path
-elif args.pre_trained_baseline:
-    save_path = "pre_trained_baseline-" + args.save_path
 else:
     save_path = args.save_path
     save_path += "-" + next_token_type 
