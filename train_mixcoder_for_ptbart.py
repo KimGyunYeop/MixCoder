@@ -188,6 +188,7 @@ else:
     from modeling_mc_with_pre_trained_bart import BartForConditionalGeneration, BartConfig
     tokenizer = BartTokenizer.from_pretrained(pre_train_path)
     print(len(tokenizer))
+    
     if next_token_type == "new_token":
         tokenizer.add_tokens("<next>", special_tokens=True)
         next_token_id = tokenizer.convert_tokens_to_ids("<next>")
@@ -211,7 +212,7 @@ else:
                                     is_encoder_decoder=True, 
                                     forced_bos_token_id=tokenizer.bos_token_id, 
                                     forced_eos_token_id=tokenizer.eos_token_id, 
-                                    vocab_size=len(tokenizer),
+                                    vocab_size=len(tokenizer) - 1, #pre trained model is not have <next> token
                                     next_token_type=next_token_type,
                                     next_token_id=next_token_id,
                                     share_self_attention_module=share_self_attention_module,
@@ -225,6 +226,7 @@ else:
                                     )
     print(mixcoder_config)
     model = BartForConditionalGeneration(config=mixcoder_config)
+    print("load_pre trained model")
     model = model.from_pretrained(pre_train_path, config=mixcoder_config)
     
     print(model.config)
