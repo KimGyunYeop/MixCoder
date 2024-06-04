@@ -19,6 +19,8 @@ import numpy as np
 import json
 import wandb
 
+import pandas as pd
+
 #set seed function
 def set_seed(seed):
     torch.manual_seed(seed)
@@ -37,6 +39,7 @@ argparser.add_argument("--indi_cross_q", default=False, action="store_true")
 argparser.add_argument("--indi_cross_out", default=False, action="store_true")
 argparser.add_argument("--pass_hidden_to_cross_att", default=False, action="store_true")
 argparser.add_argument("--share_ffnn", default=False, action="store_true")
+argparser.add_argument("--setting", type=str, default=None)
 
 argparser.add_argument("--data_name", type=str, default="xsum")
 # argparser.add_argument("--subset", type=str, default="de-en")
@@ -48,7 +51,7 @@ argparser.add_argument("--gpu", type=int, default=0)
 argparser.add_argument("--learning_rate", type=float, default=5e-5)
 argparser.add_argument("--epoch", type=int, default=10)
 argparser.add_argument("--full_step", type=int, default=1000010)
-argparser.add_argument("--eval_step", type=int, default=100)
+argparser.add_argument("--eval_step", type=int, default=50000)
 argparser.add_argument("--save_path", type=str, default="")
 argparser.add_argument("--baseline", default=False, action="store_true")
 argparser.add_argument("--pre_trained_baseline", default=False, action="store_true")
@@ -58,6 +61,41 @@ argparser.add_argument("--logging_step", type=int, default=1000)
 
 args = argparser.parse_args()
 set_seed(args.seed)
+
+setting_dict = {
+    "1":
+        {
+            "share_self_attention_module":True,
+            "indi_self_q":False,
+            "indi_self_out":False,
+            "share_cross_attention_module":True,
+            "indi_cross_q":False,   
+            "indi_cross_out":False,
+            "pass_hidden_to_cross_att":True,
+            "share_ffnn":True
+        },
+    "2":
+        {
+            "share_self_attention_module":True,
+            "indi_self_q":True,
+            "indi_self_out":True,
+            "share_cross_attention_module":True,
+            "indi_cross_q":True,   
+            "indi_cross_out":True,
+            "pass_hidden_to_cross_att":True,
+            "share_ffnn":False
+        }
+}
+
+if args.setting is not None:
+    args.share_self_attention_module = setting_dict[args.setting]["share_self_attention_module"]
+    args.indi_self_q = setting_dict[args.setting]["indi_self_q"]
+    args.indi_self_out = setting_dict[args.setting]["indi_self_out"]
+    args.share_cross_attention_module = setting_dict[args.setting]["share_cross_attention_module"]
+    args.indi_cross_q = setting_dict[args.setting]["indi_cross_q"]
+    args.indi_cross_out = setting_dict[args.setting]["indi_cross_out"]
+    args.pass_hidden_to_cross_att = setting_dict[args.setting]["pass_hidden_to_cross_att"]
+    args.share_ffnn = setting_dict[args.setting]["share_ffnn"]
 
 DATA_INFO = {
     "cnn_dailymail": {"data_name":"abisee/cnn_dailymail","subset":"3.0.0","src_lang":"article", "tgt_lang":"highlights"},
@@ -177,6 +215,7 @@ elif args.pre_trained_baseline:
 
 else:
     tokenizer = custom_tokenizer.get_tokenizer(tokenizer_path)
+    len_tokenizer = len(tokenizer)
     if next_token_type == "new_token":
         tokenizer.add_tokens("<next>", special_tokens=True)
         next_token_id = tokenizer.convert_tokens_to_ids("<next>")
@@ -198,7 +237,7 @@ else:
                                     is_encoder_decoder=True, 
                                     forced_bos_token_id=tokenizer.bos_token_id, 
                                     forced_eos_token_id=tokenizer.eos_token_id, 
-                                    vocab_size=len(tokenizer),
+                                    vocab_size=len_tokenizer,
                                     next_token_type=next_token_type,
                                     next_token_id=next_token_id,
                                     share_self_attention_module=share_self_attention_module,
@@ -239,6 +278,8 @@ preds = []
 model.train()
 result_dict_rouge = {}
 logging_losses = []
+best_rouge = 0
+best_step = 0
 for E in range(epoch):
     print(f"Epoch {E}")
 
@@ -258,7 +299,6 @@ for E in range(epoch):
         optimizer.zero_grad()
 
         cur_step += 1
-
 
         if cur_step%eval_step == 0:
             model.eval()
@@ -290,6 +330,11 @@ for E in range(epoch):
                 # matric_bleu_v14_result = matric_bleu_v14.compute(tokenizer="intl")
                 # result_dict_sacre_bleu_v14[str(cur_step)] = matric_bleu_v14_result
                 print(matric_rouge_result)
+
+                if matric_rouge_result["rouge2"] > best_rouge:
+                    best_rouge = matric_rouge_result["rouge2"]
+                    best_rouge = cur_step
+                
                 
                 os.makedirs(os.path.join(save_path,str(cur_step)), exist_ok=True)
                 model.save_pretrained(os.path.join(save_path,str(cur_step)), safe_serialization=False)
@@ -312,4 +357,53 @@ for E in range(epoch):
         if cur_step > full_step:
             break
 
-        
+
+if os.path.exists(os.path.join("results_rouge.csv")):
+    result_df = pd.read_csv("results_rouge.csv", index_col = 0)
+else:
+    result_df = pd.DataFrame(columns=["save_path", "rouge1", "rouge2", "rougeL", "rougeLsum"])  
+
+model.from_pretrained(os.path.join(save_path,str(best_step)), local_files_only=True)
+model.eval()
+
+rouge = evaluate.load("rouge")
+with torch.no_grad():
+    refers = []
+    preds = []
+    for batch in tqdm(test_dataloader):
+        for i in batch.keys():
+            batch[i] = batch[i].to(device)
+
+        out = model.generate(input_ids=batch["input_ids"], attention_mask=batch["attention_mask"], use_cache=False, num_beams=4, do_sample=True, max_new_tokens=512)
+        print(out)
+        pred_str = tokenizer.batch_decode(out, skip_special_tokens=True)
+        print(pred_str)
+        # out = model.generate(input_ids=batch["input_ids"], attention_mask=batch["attention_mask"], use_cache=True)
+        # print(out)
+        # # out = model(**batch)
+        # # pred = out.logits.argmax(dim=-1)
+        # pred_str = tokenizer.batch_decode(out, skip_special_tokens=True)
+        # print(pred_str)
+
+        refer = tokenizer.batch_decode(torch.where(batch["labels"] == -100, tokenizer.pad_token_id, batch["labels"]), skip_special_tokens=True)
+        refers.extend(refer)
+        preds.extend(pred_str)
+        print(refer, "\n\n\n")
+
+        rouge.add_batch(predictions=pred_str, references=refer)
+
+    # matric.add_batch(predictions=preds, references=refers)
+    # matric_result=matric_scarebleu.compute(predictions=preds, references=refers)
+    rouge_result = rouge.compute()
+    print(rouge_result)
+    
+    result_str_dict = dict()
+    for idx,(r,p) in enumerate(zip(refers, preds)):
+        result_str_dict[str(idx)] = {"ref":r, "pred":p}
+
+    json.dump(result_str_dict, open(os.path.join(save_path,"test_result.json"), "w", encoding="utf8"), indent=2)
+
+    result_df.loc[len(result_df.index)] = {"save_path":save_path, "rouge1":rouge_result["rouge1"], "rouge2":rouge_result["rouge2"], "rougeL":rouge_result["rougeL"], "rougeLsum":rouge_result["rougeLsum"]}
+    result_df.to_csv("results.csv")
+    
+    wandb.log({"test_ROUGE1":rouge_result["rouge1"], "test_ROUGE2":rouge_result["rouge2"], "test_ROUGEL":rouge_result["rougeL"], "test_ROUGELsum":rouge_result["rougeLsum"]})
