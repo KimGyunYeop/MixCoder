@@ -148,7 +148,7 @@ os.makedirs(save_path, exist_ok=True)
 json.dump(vars(args), open(os.path.join(save_path, "args.json"), "w", encoding="utf8"), indent=2)
 
 # wandb.log({"loss":np.mean(logging_losses), "_step":cur_step, "BLEU":matric_bleu_result["bleu"], "sacreBLEU":matric_scarebleu_result["score"], "sacreBLEU_v14":matric_scarebleu_v14_result["score"]})
-wandb.init(project=f"MixCoder_{args.data_name}_{args.subset}", name=save_path, config=vars(args))
+wandb.init(project=f"MixCoder_ptBart_{args.data_name}_{args.subset}", name=save_path, config=vars(args))
 wandb.define_metric("BLEU", summary="max")
 wandb.define_metric("sacreBLEU", summary="max")
 wandb.define_metric("sacreBLEU_v14", summary="max")
