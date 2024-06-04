@@ -224,7 +224,7 @@ else:
                                     )
     print(mixcoder_config)
     model = BartForConditionalGeneration(config=mixcoder_config)
-    model = model.from_pretrained(pre_train_path)
+    model = model.from_pretrained(pre_train_path, config=mixcoder_config)
     
     print(model.config)
 
