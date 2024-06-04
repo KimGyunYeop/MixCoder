@@ -203,6 +203,7 @@ else:
                                     encoder_layers=6,
                                     encoder_attention_heads=8,
                                     encoder_ffn_dim=2048,
+                                    max_position_embeddings=512,
                                     pad_token_id=tokenizer.pad_token_id, 
                                     eos_token_id=tokenizer.eos_token_id, 
                                     bos_token_id=tokenizer.bos_token_id, 
