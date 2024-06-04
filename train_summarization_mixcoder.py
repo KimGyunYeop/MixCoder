@@ -300,62 +300,61 @@ for E in range(epoch):
 
         cur_step += 1
 
-        if cur_step%eval_step == 0:
-            model.eval()
-            
-            rouge = evaluate.load("rouge")
-            with torch.no_grad():
-                refers = []
-                preds = []
-                for batch in tqdm(val_dataloader):
-                    for i in batch.keys():
-                        batch[i] = batch[i].to(device)
-
-                    # out = model.generate(input_ids=batch["input_ids"], attention_mask=batch["attention_mask"])
-                    out = model(**batch)
-                    pred = out.logits.argmax(dim=-1)
-                    pred_str = tokenizer.batch_decode(pred, skip_special_tokens=True)
-
-                    refer = tokenizer.batch_decode(torch.where(batch["labels"] == -100, tokenizer.pad_token_id, batch["labels"]), skip_special_tokens=True)
-                    refers.extend(refer)
-                    preds.extend(pred_str)
-
-                    rouge.add_batch(predictions=pred_str, references=refer)
-                    # print(pred_str)
-
-                # matric.add_batch(predictions=preds, references=refers)
-                # matric_result=matric_scarebleu.compute(predictions=preds, references=refers)
-                matric_rouge_result = rouge.compute()
-                result_dict_rouge[str(cur_step)] = matric_rouge_result
-                # matric_bleu_v14_result = matric_bleu_v14.compute(tokenizer="intl")
-                # result_dict_sacre_bleu_v14[str(cur_step)] = matric_bleu_v14_result
-                print(matric_rouge_result)
-
-                if matric_rouge_result["rouge2"] > best_rouge:
-                    best_rouge = matric_rouge_result["rouge2"]
-                    best_step = cur_step
-                
-                
-                os.makedirs(os.path.join(save_path,str(cur_step)), exist_ok=True)
-                model.save_pretrained(os.path.join(save_path,str(cur_step)), safe_serialization=False)
-
-                result_str_dict = dict()
-                for idx,(r,p) in enumerate(zip(refers, preds)):
-                    result_str_dict[str(idx)] = {"ref":r, "pred":p}
-
-                json.dump(result_str_dict, open(os.path.join(save_path,str(cur_step),"validation_result.json"), "w", encoding="utf8"), indent=2)
-                json.dump(result_dict_rouge, open(os.path.join(save_path,"result_scareBLEU.json"), "w", encoding="utf8"), indent=2)
-
-                wandb.log({"loss":np.mean(logging_losses), "_step":cur_step, "ROUGE-1":matric_rouge_result["rouge1"], "ROUGE-2":matric_rouge_result["rouge2"], "ROUGE-L":matric_rouge_result["rougeL"], "ROUGE-Lsum":matric_rouge_result["rougeLsum"]})
-                logging_losses = []
-            model.train()
-        
-        elif cur_step % args.logging_step == 0:
+        if cur_step % args.logging_step == 0:
             wandb.log({"loss":np.mean(logging_losses), "_step":cur_step})
             logging_losses = []
             
         if cur_step > full_step:
             break
+
+    model.eval()
+    rouge = evaluate.load("rouge")
+    with torch.no_grad():
+        refers = []
+        preds = []
+        for batch in tqdm(val_dataloader):
+            for i in batch.keys():
+                batch[i] = batch[i].to(device)
+
+            # out = model.generate(input_ids=batch["input_ids"], attention_mask=batch["attention_mask"])
+            out = model(**batch)
+            pred = out.logits.argmax(dim=-1)
+            pred_str = tokenizer.batch_decode(pred, skip_special_tokens=True)
+
+            refer = tokenizer.batch_decode(torch.where(batch["labels"] == -100, tokenizer.pad_token_id, batch["labels"]), skip_special_tokens=True)
+            refers.extend(refer)
+            preds.extend(pred_str)
+
+            rouge.add_batch(predictions=pred_str, references=refer)
+            # print(pred_str)
+
+        # matric.add_batch(predictions=preds, references=refers)
+        # matric_result=matric_scarebleu.compute(predictions=preds, references=refers)
+        matric_rouge_result = rouge.compute()
+        result_dict_rouge[str(cur_step)] = matric_rouge_result
+        # matric_bleu_v14_result = matric_bleu_v14.compute(tokenizer="intl")
+        # result_dict_sacre_bleu_v14[str(cur_step)] = matric_bleu_v14_result
+        print(matric_rouge_result)
+
+        if matric_rouge_result["rouge2"] > best_rouge:
+            best_rouge = matric_rouge_result["rouge2"]
+            best_step = cur_step
+        
+        
+        os.makedirs(os.path.join(save_path,str(cur_step)), exist_ok=True)
+        model.save_pretrained(os.path.join(save_path,str(cur_step)), safe_serialization=False)
+
+        result_str_dict = dict()
+        for idx,(r,p) in enumerate(zip(refers, preds)):
+            result_str_dict[str(idx)] = {"ref":r, "pred":p}
+
+        json.dump(result_str_dict, open(os.path.join(save_path,str(cur_step),"validation_result.json"), "w", encoding="utf8"), indent=2)
+        json.dump(result_dict_rouge, open(os.path.join(save_path,"result_scareBLEU.json"), "w", encoding="utf8"), indent=2)
+
+        wandb.log({"loss":np.mean(logging_losses), "_step":cur_step, "ROUGE-1":matric_rouge_result["rouge1"], "ROUGE-2":matric_rouge_result["rouge2"], "ROUGE-L":matric_rouge_result["rougeL"], "ROUGE-Lsum":matric_rouge_result["rougeLsum"]})
+        logging_losses = []
+    model.train()
+        
 
 
 if os.path.exists(os.path.join("results_rouge.csv")):
