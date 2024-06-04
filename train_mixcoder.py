@@ -50,6 +50,7 @@ argparser.add_argument("--tokenizer_path", type=str, default="tokenizer/wmt14_de
 argparser.add_argument("--gpu", type=int, default=0)
 argparser.add_argument("--learning_rate", type=float, default=5e-5)
 argparser.add_argument("--epoch", type=int, default=10)
+argparser.add_argument("--num_beam", type=int, default=5)
 argparser.add_argument("--full_step", type=int, default=1000010)
 argparser.add_argument("--eval_step", type=int, default=50000)
 argparser.add_argument("--save_path", type=str, default="")
@@ -418,7 +419,7 @@ with torch.no_grad():
         for i in batch.keys():
             batch[i] = batch[i].to(device)
 
-        out = model.generate(input_ids=batch["input_ids"], attention_mask=batch["attention_mask"], use_cache=False, num_beams=4, do_sample=True, max_new_tokens=512)
+        out = model.generate(input_ids=batch["input_ids"], attention_mask=batch["attention_mask"], use_cache=False, num_beams=args.num_beam, do_sample=True, max_new_tokens=512)
         print(out)
         pred_str = tokenizer.batch_decode(out, skip_special_tokens=True)
         print(pred_str)

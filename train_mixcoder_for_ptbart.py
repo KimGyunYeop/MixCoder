@@ -38,6 +38,7 @@ argparser.add_argument("--pass_hidden_to_cross_att", default=False, action="stor
 argparser.add_argument("--share_ffnn", default=False, action="store_true")
 argparser.add_argument("--setting", type=str, default=None)
 argparser.add_argument("--base", default=False, action="store_true")
+argparser.add_argument("--copy_qo", default=False, action="store_true")
 
 argparser.add_argument("--data_name", type=str, default="wmt14")
 argparser.add_argument("--subset", type=str, default="de-en")
@@ -49,6 +50,7 @@ argparser.add_argument("--pre_train_path", type=str, default="lucadiliello/bart-
 argparser.add_argument("--gpu", type=int, default=0)
 argparser.add_argument("--learning_rate", type=float, default=5e-5)
 argparser.add_argument("--epoch", type=int, default=10)
+argparser.add_argument("--num_beam", type=int, default=5)
 argparser.add_argument("--full_step", type=int, default=1000010)
 argparser.add_argument("--eval_step", type=int, default=50000)
 argparser.add_argument("--save_path", type=str, default="")
@@ -254,8 +256,11 @@ else:
     model = BartForConditionalGeneration(config=mixcoder_config)
     print("load_pre trained model")
     model = model.from_pretrained(pre_train_path, config=mixcoder_config)
-    
+
     print(model.config)
+
+    if args.copy_qo:
+        model.model.deepcopy_indi_qo()
 
     if next_token_type == "new_token":
         model.resize_token_embeddings(len(tokenizer))
@@ -398,7 +403,7 @@ with torch.no_grad():
         for i in batch.keys():
             batch[i] = batch[i].to(device)
 
-        out = model.generate(input_ids=batch["input_ids"], attention_mask=batch["attention_mask"], use_cache=False, num_beams=4, do_sample=True, max_new_tokens=512)
+        out = model.generate(input_ids=batch["input_ids"], attention_mask=batch["attention_mask"], use_cache=False, num_beams=args.num_beam, do_sample=True, max_new_tokens=512)
         print(out)
         pred_str = tokenizer.batch_decode(out, skip_special_tokens=True)
         print(pred_str)

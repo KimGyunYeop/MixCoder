@@ -346,6 +346,8 @@ class BartAttention(nn.Module):
         #code for proposed methods
         self.indi_query = indi_query
         self.indi_output = indi_output
+        self.next_token_q_proj = None
+        self.next_token_out_proj = None
         if self.indi_query:
             print("make next token q_proj layer")
             self.next_token_q_proj = nn.Linear(embed_dim, embed_dim, bias=bias)
@@ -1899,6 +1901,16 @@ class BartModel(BartPreTrainedModel):
 
     def get_decoder(self):
         return self.decoder
+    
+    def deepcopy_indi_qo(self):
+        for i in range(len(self.decoder.layers)):
+            if self.decoder.layers[i].self_attn.next_token_q_proj is not None:
+                print("Copying next token q_proj for layer ", i)
+                self.decoder.layers[i].self_attn.next_token_q_proj = copy.deepcopy(self.decoder.layers[i].self_attn.q_proj)
+            
+            if self.decoder.layers[i].self_attn.next_token_out_proj is not None:
+                print("Copying next token out_proj for layer ", i)
+                self.decoder.layers[i].self_attn.next_token_out_proj = copy.deepcopy(self.decoder.layers[i].self_attn.out_proj)
 
     @add_start_docstrings_to_model_forward(BART_INPUTS_DOCSTRING)
     @add_code_sample_docstrings(
