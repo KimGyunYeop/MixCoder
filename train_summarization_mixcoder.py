@@ -333,7 +333,7 @@ for E in range(epoch):
 
                 if matric_rouge_result["rouge2"] > best_rouge:
                     best_rouge = matric_rouge_result["rouge2"]
-                    best_rouge = cur_step
+                    best_step = cur_step
                 
                 
                 os.makedirs(os.path.join(save_path,str(cur_step)), exist_ok=True)
