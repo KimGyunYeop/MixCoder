@@ -3,10 +3,17 @@ from datasets import load_dataset
 import os
 from tqdm import tqdm
 
-data_name = "abisee/cnn_dailymail"
-subset = "3.0.0"
-src_lang = "article"
-tgt_lang = "highlights"
+data_name = "xsum"
+
+DATA_INFO = {
+    "cnn_dailymail": {"data_path":"abisee/cnn_dailymail","subset":"3.0.0","src_lang":"article", "tgt_lang":"highlights"},
+    "xsum": {"data_name":"EdinburghNLP/xsum","subset":None,"src_lang":"document", "tgt_lang":"summary"},
+}
+
+data_path = DATA_INFO[data_name]["data_path"]
+subset = DATA_INFO[data_name]["subset"]
+src_lang = DATA_INFO[data_name]["src_lang"]
+tgt_lang = DATA_INFO[data_name]["tgt_lang"]
 
 def to_list_casting(data):
     data[src_lang] = dataset["train"][src_lang]
@@ -14,7 +21,7 @@ def to_list_casting(data):
     return data
 
 # Load the dataset en-de dataset
-dataset = load_dataset(data_name, subset)
+dataset = load_dataset(data_path, subset)
 print(dataset)
 
 data = []
