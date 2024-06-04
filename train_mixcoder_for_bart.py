@@ -187,7 +187,7 @@ if args.baseline:
 
 else:
     from transformers import BartTokenizer
-    from train_mixcoder_for_bart import BartForConditionalGeneration, BartConfig
+    from modeling_mc_with_pre_trained_bart import BartForConditionalGeneration, BartConfig
     tokenizer = BartTokenizer.from_pretrained(pre_train_path)
     print(len(tokenizer))
     if next_token_type == "new_token":

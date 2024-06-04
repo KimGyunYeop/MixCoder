@@ -209,7 +209,7 @@ else:
     else:
         next_token_id = None
 
-    from modeling_mc_with_pre_trained_bart import T5ForConditionalGeneration, T5Config
+    from modeling_mc_with_t5 import T5ForConditionalGeneration, T5Config
     t5_config = T5Config(num_layers=6,
                             d_model=512,
                             num_heads=8,
