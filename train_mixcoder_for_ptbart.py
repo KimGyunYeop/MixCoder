@@ -141,6 +141,8 @@ else:
         save_path += "-hidden_cross_att"
     if share_ffnn:
         save_path += "-share_ffnn"
+    if args.copy_qo:
+        save_path += "-copy_qo"
 
 if args.base:
     pre_train_path = "facebook/bart-base"
@@ -260,6 +262,7 @@ else:
     print(model.config)
 
     if args.copy_qo:
+        print("copy qo")
         model.model.deepcopy_indi_qo()
 
     if next_token_type == "new_token":
