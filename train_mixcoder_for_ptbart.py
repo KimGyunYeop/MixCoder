@@ -187,7 +187,7 @@ else:
     from transformers import BartTokenizer
     from modeling_mc_with_pre_trained_bart import BartForConditionalGeneration, BartConfig
     tokenizer = BartTokenizer.from_pretrained(pre_train_path)
-    print(len(tokenizer))
+    len_tokenizer = len(tokenizer)
     
     if next_token_type == "new_token":
         tokenizer.add_tokens("<next>", special_tokens=True)
@@ -212,7 +212,7 @@ else:
                                     is_encoder_decoder=True, 
                                     forced_bos_token_id=tokenizer.bos_token_id, 
                                     forced_eos_token_id=tokenizer.eos_token_id, 
-                                    vocab_size=len(tokenizer) - 1, #pre trained model is not have <next> token
+                                    vocab_size=len_tokenizer, #pre trained model is not have <next> token
                                     next_token_type=next_token_type,
                                     next_token_id=next_token_id,
                                     share_self_attention_module=share_self_attention_module,
