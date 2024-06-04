@@ -38,7 +38,7 @@ argparser.add_argument("--indi_cross_out", default=False, action="store_true")
 argparser.add_argument("--pass_hidden_to_cross_att", default=False, action="store_true")
 argparser.add_argument("--share_ffnn", default=False, action="store_true")
 
-argparser.add_argument("--data_name", type=str, default="cnn_dailymail")
+argparser.add_argument("--data_name", type=str, default="xsum")
 # argparser.add_argument("--subset", type=str, default="de-en")
 # argparser.add_argument("--src_lang", type=str, default="en")
 # argparser.add_argument("--tgt_lang", type=str, default="de")
@@ -151,8 +151,10 @@ if args.baseline:
     tokenizer = custom_tokenizer.get_tokenizer(tokenizer_path)
     bartconfig = BartConfig(n_layer=6,
                             d_model=512,
+                            decoder_layers=6,
                             decoder_attention_heads=8,
                             decoder_ffn_dim=2048,
+                            encoder_layers=6,
                             encoder_attention_heads=8,
                             encoder_ffn_dim=2048,
                             pad_token_id=tokenizer.pad_token_id, 
@@ -183,8 +185,10 @@ else:
 
     mixcoder_config = MixcoderConfig(n_layer=6,
                                     d_model=512,
+                                    decoder_layers=6,
                                     decoder_attention_heads=8,
                                     decoder_ffn_dim=2048,
+                                    encoder_layers=6,
                                     encoder_attention_heads=8,
                                     encoder_ffn_dim=2048,
                                     pad_token_id=tokenizer.pad_token_id, 
