@@ -39,6 +39,7 @@ argparser.add_argument("--indi_cross_out", default=False, action="store_true")
 argparser.add_argument("--pass_hidden_to_cross_att", default=False, action="store_true")
 argparser.add_argument("--share_ffnn", default=False, action="store_true")
 argparser.add_argument("--setting", type=str, default=None)
+argparser.add_argument("--base", default=False, action="store_true")
 
 argparser.add_argument("--data_name", type=str, default="wmt14")
 argparser.add_argument("--subset", type=str, default="de-en")
@@ -142,7 +143,34 @@ else:
     if share_ffnn:
         save_path += "-share_ffnn"
 
-save_path = os.path.join("results",f"{args.data_name}_{args.src_lang}-{args.tgt_lang}", save_path)
+if args.base:
+    n_layer=6
+    d_model=768
+    decoder_layers=6
+    decoder_attention_heads=12
+    decoder_ffn_dim=3072
+    encoder_layers=6
+    encoder_attention_heads=12
+    encoder_ffn_dim=3072
+    max_position_embeddings=1024
+
+    save_path = os.path.join("results_base",f"{args.data_name}_{args.src_lang}-{args.tgt_lang}", save_path)
+    wandb.init(project=f"MixCoder_base_{args.data_name}_{args.subset}", name=save_path, config=vars(args))
+
+else:
+    n_layer=6
+    d_model=512
+    decoder_layers=6
+    decoder_attention_heads=8
+    decoder_ffn_dim=2048
+    encoder_layers=6
+    encoder_attention_heads=8
+    encoder_ffn_dim=2048
+    max_position_embeddings=512
+
+    save_path = os.path.join("results",f"{args.data_name}_{args.src_lang}-{args.tgt_lang}", save_path)
+    wandb.init(project=f"MixCoder_{args.data_name}_{args.subset}", name=save_path, config=vars(args))
+
 
 # if os.path.exists(save_path):
 #     input("this path already exists. press enter to continue.")
@@ -151,7 +179,6 @@ os.makedirs(save_path, exist_ok=True)
 json.dump(vars(args), open(os.path.join(save_path, "args.json"), "w", encoding="utf8"), indent=2)
 
 # wandb.log({"loss":np.mean(logging_losses), "_step":cur_step, "BLEU":matric_bleu_result["bleu"], "sacreBLEU":matric_scarebleu_result["score"], "sacreBLEU_v14":matric_scarebleu_v14_result["score"]})
-wandb.init(project=f"MixCoder_{args.data_name}_{args.subset}", name=save_path, config=vars(args))
 wandb.define_metric("BLEU", summary="max")
 wandb.define_metric("sacreBLEU", summary="max")
 wandb.define_metric("sacreBLEU_v14", summary="max")
@@ -182,14 +209,15 @@ print(dataset)
 
 if args.baseline:
     tokenizer = custom_tokenizer.get_tokenizer(tokenizer_path)
-    bartconfig = BartConfig(n_layer=6,
-                            d_model=512,
-                            decoder_layers=6,
-                            decoder_attention_heads=8,
-                            decoder_ffn_dim=2048,
-                            encoder_layers=6,
-                            encoder_attention_heads=8,
-                            encoder_ffn_dim=2048,
+    bartconfig = BartConfig(n_layer=n_layer,
+                            d_model=d_model,
+                            decoder_layers=decoder_layers,
+                            decoder_attention_heads=decoder_attention_heads,
+                            decoder_ffn_dim=decoder_ffn_dim,
+                            encoder_layers=encoder_layers,
+                            encoder_attention_heads=encoder_attention_heads,
+                            encoder_ffn_dim=encoder_ffn_dim,
+                            max_position_embeddings=max_position_embeddings,
                             pad_token_id=tokenizer.pad_token_id, 
                             eos_token_id=tokenizer.eos_token_id, 
                             bos_token_id=tokenizer.bos_token_id, 
@@ -218,14 +246,15 @@ else:
         next_token_id = None
     print(len(tokenizer))
 
-    mixcoder_config = MixcoderConfig(n_layer=6,
-                                    d_model=512,
-                                    decoder_layers=6,
-                                    decoder_attention_heads=8,
-                                    decoder_ffn_dim=2048,
-                                    encoder_layers=6,
-                                    encoder_attention_heads=8,
-                                    encoder_ffn_dim=2048,
+    mixcoder_config = MixcoderConfig(n_layer=n_layer,
+                                    d_model=d_model,
+                                    decoder_layers=decoder_layers,
+                                    decoder_attention_heads=decoder_attention_heads,
+                                    decoder_ffn_dim=decoder_ffn_dim,
+                                    encoder_layers=encoder_layers,
+                                    encoder_attention_heads=encoder_attention_heads,
+                                    encoder_ffn_dim=encoder_ffn_dim,
+                                    max_position_embeddings=max_position_embeddings,
                                     pad_token_id=tokenizer.pad_token_id, 
                                     eos_token_id=tokenizer.eos_token_id, 
                                     bos_token_id=tokenizer.bos_token_id, 
