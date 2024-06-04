@@ -1,13 +1,11 @@
 import datasets
-# from transformers import BartModel, BartConfig, BartForConditionalGeneration, BertModel
-from transformers import AdamW, get_scheduler, BartConfig, BartForConditionalGeneration, BartTokenizer
+from transformers import AdamW, get_scheduler
 import torch
 from datasets import load_dataset
 import custom_datasets
 import custom_tokenizer
 # from modeling_mixcoder import MixCoderForConditionalGeneration, MixCoderConfig
 # from modeling_mc import BartForConditionalGeneration, BartConfig
-from modeling_mc import MixcoderForConditionalGeneration, MixcoderConfig
 import evaluate
 
 from tqdm import tqdm
@@ -143,7 +141,7 @@ else:
     if share_ffnn:
         save_path += "-share_ffnn"
 
-save_path = os.path.join("results",f"{args.data_name}_{args.src_lang}-{args.tgt_lang}", save_path)
+save_path = os.path.join("results_ptBart",f"{args.data_name}_{args.src_lang}-{args.tgt_lang}", save_path)
 
 # if os.path.exists(save_path):
 #     input("this path already exists. press enter to continue.")
