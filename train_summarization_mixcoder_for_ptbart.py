@@ -40,6 +40,7 @@ argparser.add_argument("--pass_hidden_to_cross_att", default=False, action="stor
 argparser.add_argument("--share_ffnn", default=False, action="store_true")
 argparser.add_argument("--setting", type=str, default=None)
 argparser.add_argument("--base", default=False, action="store_true")
+argparser.add_argument("--copy_qo", default=False, action="store_true")
 
 argparser.add_argument("--data_name", type=str, default="xsum")
 # argparser.add_argument("--subset", type=str, default="de-en")
