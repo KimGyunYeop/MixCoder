@@ -232,7 +232,7 @@ with torch.no_grad():
         for i in batch.keys():
             batch[i] = batch[i].to(device)
 
-        out = model.generate(input_ids=batch["input_ids"], attention_mask=batch["attention_mask"], use_cache=False, num_beams=4, do_sample=True, max_new_tokens=512)
+        out = model.generate(input_ids=batch["input_ids"], attention_mask=batch["attention_mask"], use_cache=False, num_beams=5, do_sample=True, max_new_tokens=512)
         print(out)
         pred_str = tokenizer.batch_decode(out, skip_special_tokens=True)
         print(pred_str)
