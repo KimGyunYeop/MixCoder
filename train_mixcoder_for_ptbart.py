@@ -39,6 +39,7 @@ argparser.add_argument("--share_ffnn", default=False, action="store_true")
 argparser.add_argument("--setting", type=str, default=None)
 argparser.add_argument("--base", default=False, action="store_true")
 argparser.add_argument("--copy_qo", default=False, action="store_true")
+argparser.add_argument("--copy_f", default=False, action="store_true")
 
 argparser.add_argument("--data_name", type=str, default="wmt14")
 argparser.add_argument("--subset", type=str, default="de-en")
@@ -143,6 +144,8 @@ else:
         save_path += "-share_ffnn"
     if args.copy_qo:
         save_path += "-copy_qo"
+    if args.copy_f:
+        save_path += "f"
 
 if args.base:
     pre_train_path = "facebook/bart-base"
@@ -256,7 +259,7 @@ else:
                                     )
     print(mixcoder_config)
     model = BartForConditionalGeneration(config=mixcoder_config)
-    print("load_pre trained model")
+    print("load_pre trained model", pre_train_path)
     model = model.from_pretrained(pre_train_path, config=mixcoder_config)
 
     print(model.config)
@@ -264,6 +267,9 @@ else:
     if args.copy_qo:
         print("copy qo")
         model.model.deepcopy_indi_qo()
+    if args.copy_f:
+        print("copy f")
+        model.model.deepcopy_f()
 
     if next_token_type == "new_token":
         model.resize_token_embeddings(len(tokenizer))

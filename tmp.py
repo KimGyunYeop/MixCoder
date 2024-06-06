@@ -113,13 +113,13 @@ wrapped_tokenizer = PreTrainedTokenizerFast(
 )
 
 wrapped_tokenizer = BartTokenizer.from_pretrained("facebook/bart-base")
-wrapped_tokenizer = GPT2Tokenizer.from_pretrained("gpt2")
+# wrapped_tokenizer = GPT2Tokenizer.from_pretrained("gpt2")
 # wrapped_tokenizer = GPT2Tokenizer.from_pretrained("openai-community/gpt2")
 
 in_text = "Diese Frage hat Gutachs Bürgermeister gestern klar beantwortet."
 out_text = "Yesterday, Gutacht's Mayor gave a clear answer to this question."
 out_text = "Hello, Nice to meet you."
-out_text = "Many memories covered in dust over time"
+# out_text = "Many memories covered in dust over time"
 
 print(wrapped_tokenizer.bos_token_id)
 print(wrapped_tokenizer(out_text, add_special_tokens=True, return_special_tokens_mask=True))
@@ -127,18 +127,18 @@ print(wrapped_tokenizer.convert_ids_to_tokens(wrapped_tokenizer(out_text)["input
 print(wrapped_tokenizer.batch_decode([wrapped_tokenizer(out_text)["input_ids"]]))
 print(wrapped_tokenizer.batch_decode([wrapped_tokenizer(out_text)["input_ids"]], skip_special_tokens=True))
 
-input_ids = wrapped_tokenizer(in_text, add_special_tokens=True, return_special_tokens_mask=True, return_tensors="pt")["input_ids"]
-decoder_input_ids = wrapped_tokenizer(out_text, add_special_tokens=True, return_special_tokens_mask=True, return_tensors="pt")["input_ids"]
+input_ids = wrapped_tokenizer(in_text, add_special_tokens=False, return_special_tokens_mask=True, return_tensors="pt")["input_ids"]
+decoder_input_ids = wrapped_tokenizer(out_text, add_special_tokens=False, return_special_tokens_mask=True, return_tensors="pt")["input_ids"]
 model = BartModel.from_pretrained("facebook/bart-base")
-model = GPT2Model.from_pretrained("gpt2")
-out = model(input_ids=decoder_input_ids, output_attentions=True)
-# out = model(input_ids=input_ids, decoder_input_ids=decoder_input_ids, output_attentions=True)
+# model = GPT2Model.from_pretrained("gpt2")
+# out = model(input_ids=decoder_input_ids, output_attentions=True)
+out = model(input_ids=input_ids, decoder_input_ids=decoder_input_ids, output_attentions=True)
 print(model.config)
 print(out.keys())
-# att = torch.stack(out.decoder_attentions)
-# print(torch.stack(out.decoder_attentions).shape)
-att = torch.stack(out.attentions)
-print(torch.stack(out.attentions).shape)
+att = torch.stack(out.decoder_attentions)
+print(torch.stack(out.decoder_attentions).shape)
+# att = torch.stack(out.attentions)
+# print(torch.stack(out.attentions).shape)
 print(torch.mean(torch.mean(att, dim=0), dim=1).unsqueeze(0))
 plt.matshow(torch.mean(torch.mean(att, dim=0), dim=1).squeeze()[:,:].detach().numpy())
 plt.savefig("figs/att.png")

@@ -1911,6 +1911,16 @@ class BartModel(BartPreTrainedModel):
             if self.decoder.layers[i].self_attn.next_token_out_proj is not None:
                 print("Copying next token out_proj for layer ", i)
                 self.decoder.layers[i].self_attn.next_token_out_proj = copy.deepcopy(self.decoder.layers[i].self_attn.out_proj)
+                
+    def deepcopy_f(self):
+        for i in range(len(self.decoder.layers)):
+            if self.decoder.layers[i].next_token_encoder_attn_layer_norm is not None:
+                print("Copying FFNN layer ", i)
+                self.decoder.layers[i].next_token_encoder_attn_layer_norm = copy.deepcopy(self.decoder.layers[i].encoder_attn_layer_norm)
+                self.decoder.layers[i].next_token_fc1 = copy.deepcopy(self.decoder.layers[i].fc1)
+                self.decoder.layers[i].next_token_fc2 = copy.deepcopy(self.decoder.layers[i].fc2)
+                self.decoder.layers[i].next_token_final_layer_norm = copy.deepcopy(self.decoder.layers[i].final_layer_norm)
+                self.decoder.layers[i].next_token_self_attn_layer_norm = copy.deepcopy(self.decoder.layers[i].self_attn_layer_norm)
 
     @add_start_docstrings_to_model_forward(BART_INPUTS_DOCSTRING)
     @add_code_sample_docstrings(
