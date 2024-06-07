@@ -227,7 +227,7 @@ print(dataset)
 if args.baseline:
     from transformers import BartTokenizer, BartForConditionalGeneration
     tokenizer = BartTokenizer.from_pretrained(pre_train_path)
-    model = BartForConditionalGeneration.from_pretrained(pre_train_path, device_map="auto")
+    model = BartForConditionalGeneration.from_pretrained(pre_train_path)
     # model.to(device)
 
 else:
@@ -274,7 +274,7 @@ else:
     print(mixcoder_config)
     model = BartForConditionalGeneration(config=mixcoder_config)
     print("load_pre trained model")
-    model = model.from_pretrained(pre_train_path, config=mixcoder_config, device_map="auto")
+    model = model.from_pretrained(pre_train_path, config=mixcoder_config)
 
     print(model.config)
 
