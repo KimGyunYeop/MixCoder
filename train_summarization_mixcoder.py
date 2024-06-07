@@ -48,7 +48,7 @@ argparser.add_argument("--data_name", type=str, default="xsum")
 # argparser.add_argument("--tgt_lang", type=str, default="de")
 argparser.add_argument("--batch_size", type=int, default=16)
 argparser.add_argument("--tokenizer_path", type=str, default="tokenizer/cnn_dailymail_3.0.0_BPEtokenizer.json")
-argparser.add_argument("--gpu", type=int, default=0)
+argparser.add_argument("--gpu", type=str, default=0)
 argparser.add_argument("--learning_rate", type=float, default=5e-5)
 argparser.add_argument("--epoch", type=int, default=10)
 argparser.add_argument("--num_beam", type=int, default=5)
@@ -111,7 +111,10 @@ tgt_lang = DATA_INFO[args.data_name]["tgt_lang"]
 batch_size = args.batch_size
 tokenizer_path = args.tokenizer_path
 gpu = args.gpu
-device = "cuda:"+str(gpu)
+if gpu == "auto":
+    decive = "auto"
+else:
+    device = "cuda:"+str(gpu)
 learning_rate = args.learning_rate
 epoch = args.epoch
 full_step = args.full_step
