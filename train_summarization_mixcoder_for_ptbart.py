@@ -19,7 +19,6 @@ import json
 import wandb
 
 import pandas as pd
-from accelerate import Accelerator
 
 #set seed function
 def set_seed(seed):
@@ -50,7 +49,7 @@ argparser.add_argument("--data_name", type=str, default="xsum")
 # argparser.add_argument("--tgt_lang", type=str, default="de")
 argparser.add_argument("--batch_size", type=int, default=16)
 argparser.add_argument("--tokenizer_path", type=str, default="tokenizer/cnn_dailymail_3.0.0_BPEtokenizer.json")
-argparser.add_argument("--gpu", type=str, default="auto")
+argparser.add_argument("--gpu", type=int, default=0)
 argparser.add_argument("--learning_rate", type=float, default=5e-5)
 argparser.add_argument("--epoch", type=int, default=10)
 argparser.add_argument("--num_beam", type=int, default=5)
@@ -113,10 +112,7 @@ tgt_lang = DATA_INFO[args.data_name]["tgt_lang"]
 batch_size = args.batch_size
 tokenizer_path = args.tokenizer_path
 gpu = args.gpu
-if gpu == "auto":
-    decive = "auto"
-else:
-    device = "cuda:"+str(gpu)
+device = "cuda:"+str(gpu)
 learning_rate = args.learning_rate
 epoch = args.epoch
 full_step = args.full_step
@@ -228,7 +224,7 @@ if args.baseline:
     from transformers import BartTokenizer, BartForConditionalGeneration
     tokenizer = BartTokenizer.from_pretrained(pre_train_path)
     model = BartForConditionalGeneration.from_pretrained(pre_train_path)
-    # model.to(device)
+    model.to(device)
 
 else:
     from transformers import BartTokenizer
@@ -289,7 +285,7 @@ else:
     if next_token_type == "new_token":
         model.resize_token_embeddings(len(tokenizer))
 
-    # model.to(device)
+    model.to(device)
 
 print(model)
 
@@ -305,10 +301,6 @@ num_training = len(train_dataloader) * epoch
 optimizer = AdamW(model.parameters(), lr=learning_rate)
 scheduler = get_scheduler("linear", optimizer, num_warmup_steps=100, num_training_steps=num_training)
 
-accelerator = Accelerator()
-model, optimizer, train_dataloader, val_dataloader, test_dataloader, scheduler = accelerator.prepare(
-    model, optimizer, train_dataloader, val_dataloader, test_dataloader, scheduler
-    )
 cur_step = 0
 
 refers = []
@@ -323,8 +315,8 @@ for E in range(epoch):
 
     td = tqdm(train_dataloader)
     for batch in td:
-        # for i in batch.keys():
-        #     batch[i] = batch[i].to(model.device)
+        for i in batch.keys():
+            batch[i] = batch[i].to(device)
         
         out = model(**batch)
         out.loss.backward()
@@ -351,8 +343,8 @@ for E in range(epoch):
         refers = []
         preds = []
         for batch in tqdm(val_dataloader):
-            # for i in batch.keys():
-            #     batch[i] = batch[i].to(model.device)
+            for i in batch.keys():
+                batch[i] = batch[i].to(device)
 
             # out = model.generate(input_ids=batch["input_ids"], attention_mask=batch["attention_mask"])
             out = model(**batch)
@@ -408,8 +400,8 @@ with torch.no_grad():
     refers = []
     preds = []
     for batch in tqdm(test_dataloader):
-        # for i in batch.keys():
-        #     batch[i] = batch[i].to(model.device)
+        for i in batch.keys():
+            batch[i] = batch[i].to(device)
 
         out = model.generate(input_ids=batch["input_ids"], attention_mask=batch["attention_mask"], use_cache=False, num_beams=args.num_beam, do_sample=True, max_new_tokens=512)
         print(out)
