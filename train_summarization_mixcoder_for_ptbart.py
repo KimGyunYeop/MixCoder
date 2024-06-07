@@ -19,6 +19,7 @@ import json
 import wandb
 
 import pandas as pd
+from accelerate import Accelerator
 
 #set seed function
 def set_seed(seed):
@@ -304,6 +305,10 @@ num_training = len(train_dataloader) * epoch
 optimizer = AdamW(model.parameters(), lr=learning_rate)
 scheduler = get_scheduler("linear", optimizer, num_warmup_steps=100, num_training_steps=num_training)
 
+accelerator = Accelerator()
+model, optimizer, train_dataloader, val_dataloader, test_dataloader, scheduler = accelerator.prepare(
+    model, optimizer, train_dataloader, val_dataloader, test_dataloader, scheduler
+    )
 cur_step = 0
 
 refers = []
@@ -318,8 +323,8 @@ for E in range(epoch):
 
     td = tqdm(train_dataloader)
     for batch in td:
-        for i in batch.keys():
-            batch[i] = batch[i].to(model.device)
+        # for i in batch.keys():
+        #     batch[i] = batch[i].to(model.device)
         
         out = model(**batch)
         out.loss.backward()
@@ -346,8 +351,8 @@ for E in range(epoch):
         refers = []
         preds = []
         for batch in tqdm(val_dataloader):
-            for i in batch.keys():
-                batch[i] = batch[i].to(model.device)
+            # for i in batch.keys():
+            #     batch[i] = batch[i].to(model.device)
 
             # out = model.generate(input_ids=batch["input_ids"], attention_mask=batch["attention_mask"])
             out = model(**batch)
@@ -403,8 +408,8 @@ with torch.no_grad():
     refers = []
     preds = []
     for batch in tqdm(test_dataloader):
-        for i in batch.keys():
-            batch[i] = batch[i].to(model.device)
+        # for i in batch.keys():
+        #     batch[i] = batch[i].to(model.device)
 
         out = model.generate(input_ids=batch["input_ids"], attention_mask=batch["attention_mask"], use_cache=False, num_beams=args.num_beam, do_sample=True, max_new_tokens=512)
         print(out)
