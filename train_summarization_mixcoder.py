@@ -164,7 +164,7 @@ if args.base:
     max_position_embeddings=1024
 
     save_path = os.path.join("results_base",f"{args.data_name}_{src_lang}-{tgt_lang}", save_path)
-    wandb.init(project=f"MixCoder_base_{args.data_name}_{subset}", name=save_path, config=vars(args))
+    wandb.init(project=f"MixCoder_base_{args.data_name}_{subset}_{src_lang}-{tgt_lang}", name=save_path, config=vars(args))
 
 else:
     n_layer=6
@@ -178,7 +178,7 @@ else:
     max_position_embeddings=512
 
     save_path = os.path.join("results",f"{args.data_name}_{src_lang}-{tgt_lang}", save_path)
-    wandb.init(project=f"MixCoder_{args.data_name}_{subset}", name=save_path, config=vars(args))
+    wandb.init(project=f"MixCoder_{args.data_name}_{subset}_{src_lang}-{tgt_lang}", name=save_path, config=vars(args))
 
 # if os.path.exists(save_path):
 #     input("this path already exists. press enter to continue.")
