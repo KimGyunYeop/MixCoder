@@ -50,6 +50,7 @@ argparser.add_argument("--tokenizer_path", type=str, default="tokenizer/wmt14_de
 argparser.add_argument("--pre_train_path", type=str, default="lucadiliello/bart-small")
 argparser.add_argument("--gpu", type=int, default=0)
 argparser.add_argument("--learning_rate", type=float, default=5e-5)
+argparser.add_argument("--weight_decay", type=float, default=0.0)
 argparser.add_argument("--epoch", type=int, default=10)
 argparser.add_argument("--num_beam", type=int, default=5)
 argparser.add_argument("--full_step", type=int, default=1000010)
@@ -289,7 +290,7 @@ val_dataloader = torch.utils.data.DataLoader(val_dataset, batch_size=1, collate_
 test_dataloader = torch.utils.data.DataLoader(test_dataset, batch_size=1, collate_fn=test_dataset.collate_fn)
 
 num_training = len(train_dataloader) * epoch
-optimizer = AdamW(model.parameters(), lr=learning_rate)
+optimizer = AdamW(model.parameters(), lr=learning_rate, weight_decay=args.weight_decay)
 scheduler = get_scheduler("linear", optimizer, num_warmup_steps=100, num_training_steps=num_training)
 
 cur_step = 0
