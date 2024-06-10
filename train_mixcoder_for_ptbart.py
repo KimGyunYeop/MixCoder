@@ -1,5 +1,5 @@
 import datasets
-from transformers import AdamW, get_scheduler
+from transformers import AdamW, get_scheduler, GPT2Config
 import torch
 from datasets import load_dataset
 import custom_datasets
@@ -50,7 +50,7 @@ argparser.add_argument("--tokenizer_path", type=str, default="tokenizer/wmt14_de
 argparser.add_argument("--pre_train_path", type=str, default="lucadiliello/bart-small")
 argparser.add_argument("--gpu", type=int, default=0)
 argparser.add_argument("--learning_rate", type=float, default=5e-5)
-argparser.add_argument("--weight_decay", type=float, default=0.0)
+argparser.add_argument("--weight_decay", type=float, default=0.01)
 argparser.add_argument("--epoch", type=int, default=10)
 argparser.add_argument("--num_beam", type=int, default=5)
 argparser.add_argument("--full_step", type=int, default=1000010)

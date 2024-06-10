@@ -1,13 +1,12 @@
 import datasets
 # from transformers import BartModel, BartConfig, BartForConditionalGeneration, BertModel
-from transformers import AdamW, get_scheduler, BartConfig, BartForConditionalGeneration, BartTokenizer
+from transformers import AdamW, get_scheduler
 import torch
 from datasets import load_dataset
 import custom_datasets
 import custom_tokenizer
 # from modeling_mixcoder import MixCoderForConditionalGeneration, MixCoderConfig
 # from modeling_mc import BartForConditionalGeneration, BartConfig
-from modeling_mc import MixcoderForConditionalGeneration, MixcoderConfig
 import evaluate
 
 from tqdm import tqdm
@@ -49,7 +48,7 @@ argparser.add_argument("--batch_size", type=int, default=16)
 argparser.add_argument("--tokenizer_path", type=str, default="tokenizer/wmt14_de-en_BPEtokenizer.json")
 argparser.add_argument("--gpu", type=int, default=0)
 argparser.add_argument("--learning_rate", type=float, default=5e-5)
-argparser.add_argument("--weight_decay", type=float, default=0.01)
+argparser.add_argument("--weight_decay", type=float, default=0.0)
 argparser.add_argument("--epoch", type=int, default=10)
 argparser.add_argument("--num_beam", type=int, default=5)
 argparser.add_argument("--full_step", type=int, default=1000010)
@@ -210,8 +209,9 @@ print(dataset)
 
 
 if args.baseline:
+    from transformers import GPT2Config, GPT2LMHeadModel
     tokenizer = custom_tokenizer.get_tokenizer(tokenizer_path)
-    bartconfig = BartConfig(n_layer=n_layer,
+    bartconfig = GPT2Config(n_layer=n_layer,
                             d_model=d_model,
                             decoder_layers=decoder_layers,
                             decoder_attention_heads=decoder_attention_heads,
@@ -230,15 +230,17 @@ if args.baseline:
                             vocab_size=len(tokenizer),
                             )
 
-    model = BartForConditionalGeneration(config=bartconfig)
+    model = GPT2LMHeadModel(config=bartconfig)
     model.to(device)
 
 elif args.pre_trained_baseline:
-    tokenizer = BartTokenizer.from_pretrained("facebook/bart-base")
-    model = BartForConditionalGeneration.from_pretrained("facebook/bart-base")
+    from transformers import GPT2Config, GPT2LMHeadModel
+    tokenizer = GPT2Config.from_pretrained("gpt2")
+    model = GPT2LMHeadModel.from_pretrained("gpt2")
     model.to(device)
 
 else:
+    from modeling_mc_with_gpt import GPT2LMHeadModel, GPT2Config
     tokenizer = custom_tokenizer.get_tokenizer(tokenizer_path)
     print(len(tokenizer))
     if next_token_type == "new_token":
@@ -248,7 +250,7 @@ else:
         next_token_id = None
     print(len(tokenizer))
 
-    mixcoder_config = MixcoderConfig(n_layer=n_layer,
+    mixcoder_config = GPT2Config(n_layer=n_layer,
                                     d_model=d_model,
                                     decoder_layers=decoder_layers,
                                     decoder_attention_heads=decoder_attention_heads,
@@ -277,7 +279,7 @@ else:
                                     share_ffnn=share_ffnn
                                     )
                             
-    model = MixcoderForConditionalGeneration(config=mixcoder_config)
+    model = GPT2LMHeadModel(config=mixcoder_config)
 
     if next_token_type == "new_token":
         model.resize_token_embeddings(len(tokenizer))
