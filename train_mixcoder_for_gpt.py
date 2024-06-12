@@ -318,9 +318,12 @@ for E in range(epoch):
                     pred = out.logits.argmax(dim=-1)
                     pred_str = tokenizer.batch_decode(pred, skip_special_tokens=True)
                     print(pred_str)
+                    pred_str = tokenizer.batch_decode(pred, skip_special_tokens=False).split(tokenizer.sep_token)[1].split(tokenizer.eos_token)[0].strip()
+                    print(pred_str)
 
                     refer = tokenizer.batch_decode(torch.where(batch["labels"] == -100, tokenizer.pad_token_id, batch["labels"]), skip_special_tokens=True)
                     print(refer)
+                    print("\n\n\n")
                     refers.extend(refer)
                     preds.extend(pred_str)
 
