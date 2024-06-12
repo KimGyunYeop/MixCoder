@@ -263,6 +263,10 @@ val_dataloader = torch.utils.data.DataLoader(val_dataset, batch_size=1, collate_
 test_dataloader = torch.utils.data.DataLoader(test_dataset, batch_size=1, collate_fn=test_dataset.collate_fn)
 
 num_training = len(train_dataloader) * epoch
+
+if len(train_dataloader) * epoch < full_step:
+    eval_step = len(train_dataloader) - 1
+
 optimizer = AdamW(model.parameters(), lr=learning_rate, weight_decay=args.weight_decay)
 scheduler = get_scheduler("linear", optimizer, num_warmup_steps=100, num_training_steps=num_training)
 
