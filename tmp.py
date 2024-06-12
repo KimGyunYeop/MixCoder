@@ -91,63 +91,64 @@
 # # out = t5model(input_ids=input_ids, decoder_input_ids=target_ids, output_attentions=True, output_hidden_states=True)
 # # print(out.keys())
 
-from tokenizers import Tokenizer, models, pre_tokenizers, trainers, processors, decoders
-from transformers import PreTrainedTokenizerFast, BartTokenizer, GPT2Tokenizer, GPT2Model, BartModel
-import torch
-from matplotlib import pyplot as plt
+# from tokenizers import Tokenizer, models, pre_tokenizers, trainers, processors, decoders
+# from transformers import PreTrainedTokenizerFast, BartTokenizer, GPT2Tokenizer, GPT2Model, BartModel
+# import torch
+# from matplotlib import pyplot as plt
 
-tokenizer = Tokenizer.from_file("tokenizer/wmt14_de-en_BPEtokenizer.json")
-# tokenizer.post_processor = processors.ByteLevel(trim_offsets=True)
-tokenizer.decoder = decoders.ByteLevel()
-tokenizer.post_processor = processors.RobertaProcessing(
-            ("</s>", tokenizer.token_to_id("</s>")),
-            ("<s>", tokenizer.token_to_id("<s>")),
-        )
+# tokenizer = Tokenizer.from_file("tokenizer/wmt14_de-en_BPEtokenizer.json")
+# # tokenizer.post_processor = processors.ByteLevel(trim_offsets=True)
+# tokenizer.decoder = decoders.ByteLevel()
+# tokenizer.post_processor = processors.RobertaProcessing(
+#             ("</s>", tokenizer.token_to_id("</s>")),
+#             ("<s>", tokenizer.token_to_id("<s>")),
+#         )
 
-wrapped_tokenizer = PreTrainedTokenizerFast(
-    tokenizer_object=tokenizer,
-    bos_token="<s>",
-    eos_token="</s>",
-    unk_token="<unk>",
-    pad_token="<pad>",
-)
+# wrapped_tokenizer = PreTrainedTokenizerFast(
+#     tokenizer_object=tokenizer,
+#     bos_token="<s>",
+#     eos_token="</s>",
+#     unk_token="<unk>",
+#     pad_token="<pad>",
+# )
 
-wrapped_tokenizer = BartTokenizer.from_pretrained("facebook/bart-base")
-# wrapped_tokenizer = GPT2Tokenizer.from_pretrained("gpt2")
-# wrapped_tokenizer = GPT2Tokenizer.from_pretrained("openai-community/gpt2")
+# wrapped_tokenizer = BartTokenizer.from_pretrained("facebook/bart-base")
+# # wrapped_tokenizer = GPT2Tokenizer.from_pretrained("gpt2")
+# # wrapped_tokenizer = GPT2Tokenizer.from_pretrained("openai-community/gpt2")
 
-in_text = "Diese Frage hat Gutachs Bürgermeister gestern klar beantwortet."
-out_text = "Yesterday, Gutacht's Mayor gave a clear answer to this question."
-out_text = "Hello, Nice to meet you."
-# out_text = "Many memories covered in dust over time"
+# in_text = "Diese Frage hat Gutachs Bürgermeister gestern klar beantwortet."
+# out_text = "Yesterday, Gutacht's Mayor gave a clear answer to this question."
+# out_text = "Hello, Nice to meet you."
+# # out_text = "Many memories covered in dust over time"
 
-print(wrapped_tokenizer.bos_token_id)
-print(wrapped_tokenizer(out_text, add_special_tokens=True, return_special_tokens_mask=True))
-print(wrapped_tokenizer.convert_ids_to_tokens(wrapped_tokenizer(out_text)["input_ids"]))
-print(wrapped_tokenizer.batch_decode([wrapped_tokenizer(out_text)["input_ids"]]))
-print(wrapped_tokenizer.batch_decode([wrapped_tokenizer(out_text)["input_ids"]], skip_special_tokens=True))
+# print(wrapped_tokenizer.bos_token_id)
+# print(wrapped_tokenizer(out_text, add_special_tokens=True, return_special_tokens_mask=True))
+# print(wrapped_tokenizer.convert_ids_to_tokens(wrapped_tokenizer(out_text)["input_ids"]))
+# print(wrapped_tokenizer.batch_decode([wrapped_tokenizer(out_text)["input_ids"]]))
+# print(wrapped_tokenizer.batch_decode([wrapped_tokenizer(out_text)["input_ids"]], skip_special_tokens=True))
 
-input_ids = wrapped_tokenizer(in_text, add_special_tokens=False, return_special_tokens_mask=True, return_tensors="pt")["input_ids"]
-decoder_input_ids = wrapped_tokenizer(out_text, add_special_tokens=False, return_special_tokens_mask=True, return_tensors="pt")["input_ids"]
-model = BartModel.from_pretrained("facebook/bart-base")
-# model = GPT2Model.from_pretrained("gpt2")
-# out = model(input_ids=decoder_input_ids, output_attentions=True)
-out = model(input_ids=input_ids, decoder_input_ids=decoder_input_ids, output_attentions=True)
-print(model.config)
-print(out.keys())
-att = torch.stack(out.decoder_attentions)
-print(torch.stack(out.decoder_attentions).shape)
-# att = torch.stack(out.attentions)
-# print(torch.stack(out.attentions).shape)
-print(torch.mean(torch.mean(att, dim=0), dim=1).unsqueeze(0))
-plt.matshow(torch.mean(torch.mean(att, dim=0), dim=1).squeeze()[:,:].detach().numpy())
-plt.savefig("figs/att.png")
-plt.clf()
-for i in range(att.size(0)):
-    print(torch.mean(att[i,0,:,:,:], dim=0).unsqueeze(0))
-    plt.matshow(torch.mean(att[i,0,:,:,:], dim=0).squeeze()[:,:].detach().numpy())
-    plt.savefig(f"figs/att_{i}.png")
-    plt.clf()
+# input_ids = wrapped_tokenizer(in_text, add_special_tokens=False, return_special_tokens_mask=True, return_tensors="pt")["input_ids"]
+# decoder_input_ids = wrapped_tokenizer(out_text, add_special_tokens=False, return_special_tokens_mask=True, return_tensors="pt")["input_ids"]
+# model = BartModel.from_pretrained("facebook/bart-base")
+# # model = GPT2Model.from_pretrained("gpt2")
+# # out = model(input_ids=decoder_input_ids, output_attentions=True)
+# out = model(input_ids=input_ids, decoder_input_ids=decoder_input_ids, output_attentions=True)
+# print(model.config)
+# print(out.keys())
+# att = torch.stack(out.decoder_attentions)
+# print(torch.stack(out.decoder_attentions).shape)
+# # att = torch.stack(out.attentions)
+# # print(torch.stack(out.attentions).shape)
+# print(torch.mean(torch.mean(att, dim=0), dim=1).unsqueeze(0))
+# plt.matshow(torch.mean(torch.mean(att, dim=0), dim=1).squeeze()[:,:].detach().numpy())
+# plt.savefig("figs/att.png")
+# plt.clf()
+# for i in range(att.size(0)):
+#     print(torch.mean(att[i,0,:,:,:], dim=0).unsqueeze(0))
+#     plt.matshow(torch.mean(att[i,0,:,:,:], dim=0).squeeze()[:,:].detach().numpy())
+#     plt.savefig(f"figs/att_{i}.png")
+#     plt.clf()
+
 # for i in range(12):
 #     for j in range(12):
 #         print(att[i,:,j,:,:].unsqueeze(0))
@@ -182,3 +183,17 @@ for i in range(att.size(0)):
 # # Generate Summary
 # summary_ids = model.generate(inputs["input_ids"], num_beams=2, min_length=0, max_length=20)
 # print(tokenizer.batch_decode(summary_ids, skip_special_tokens=False, clean_up_tokenization_spaces=False)[0])
+
+from transformers import pipeline, set_seed, TextGenerationPipeline, OpenAIGPTLMHeadModel
+generator = pipeline('text-generation', model='openai-gpt')
+set_seed(42)
+print(generator("The man worked as a", max_length=10, num_return_sequences=5))
+
+print(generator.tokenizer)
+
+print(generator.tokenizer("The man worked as a"))
+print(generator.tokenizer.batch_decode(generator.tokenizer("The man worked as a")["input_ids"], skip_special_tokens = False))
+
+print(generator.model.generate(**generator.tokenizer("The man worked as a", return_tensors="pt")))
+print(generator.tokenizer.batch_decode(generator.model.generate(**generator.tokenizer("The man worked as a", return_tensors="pt")), skip_special_tokens = False))
+

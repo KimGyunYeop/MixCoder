@@ -1,6 +1,6 @@
 import datasets
 # from transformers import BartModel, BartConfig, BartForConditionalGeneration, BertModel
-from transformers import AdamW, get_scheduler
+from transformers import AdamW, get_scheduler, AutoTokenizer
 import torch
 from datasets import load_dataset
 import custom_datasets
@@ -45,7 +45,6 @@ argparser.add_argument("--subset", type=str, default="de-en")
 argparser.add_argument("--src_lang", type=str, default="en")
 argparser.add_argument("--tgt_lang", type=str, default="de")
 argparser.add_argument("--batch_size", type=int, default=16)
-argparser.add_argument("--tokenizer_path", type=str, default="tokenizer/wmt14_de-en_BPEtokenizer.json")
 argparser.add_argument("--gpu", type=int, default=0)
 argparser.add_argument("--learning_rate", type=float, default=5e-5)
 argparser.add_argument("--weight_decay", type=float, default=0.0)
@@ -101,7 +100,7 @@ if args.setting is not None:
 data_name = args.data_name
 subset = args.subset
 batch_size = args.batch_size
-tokenizer_path = args.tokenizer_path
+tokenizer_path = f"tokenizer/GPT_{data_name}_{subset}_BPEtokenizer"
 gpu = args.gpu
 device = "cuda:"+str(gpu)
 learning_rate = args.learning_rate
@@ -146,28 +145,18 @@ else:
 
 if args.base:
     n_layer=6
-    d_model=768
-    decoder_layers=6
-    decoder_attention_heads=12
-    decoder_ffn_dim=3072
-    encoder_layers=6
-    encoder_attention_heads=12
-    encoder_ffn_dim=3072
-    max_position_embeddings=1024
+    n_embd=768
+    n_layer=6
+    n_head=12
 
     save_path = os.path.join("results_base",f"{args.data_name}_{args.src_lang}-{args.tgt_lang}", save_path)
     wandb.init(project=f"MixCoder_base_{args.data_name}_{args.subset}_{args.src_lang}-{args.tgt_lang}", name=save_path, config=vars(args))
 
 else:
     n_layer=6
-    d_model=512
-    decoder_layers=6
-    decoder_attention_heads=8
-    decoder_ffn_dim=2048
-    encoder_layers=6
-    encoder_attention_heads=8
-    encoder_ffn_dim=2048
-    max_position_embeddings=512
+    n_embd=512
+    n_layer=6
+    n_head=8
 
     save_path = os.path.join("results",f"{args.data_name}_{args.src_lang}-{args.tgt_lang}", save_path)
     wandb.init(project=f"MixCoder_{args.data_name}_{args.subset}_{args.src_lang}-{args.tgt_lang}", name=save_path, config=vars(args))
@@ -212,36 +201,21 @@ if args.baseline:
     from transformers import GPT2Config, GPT2LMHeadModel
     tokenizer = custom_tokenizer.get_tokenizer(tokenizer_path)
     bartconfig = GPT2Config(n_layer=n_layer,
-                            d_model=d_model,
-                            decoder_layers=decoder_layers,
-                            decoder_attention_heads=decoder_attention_heads,
-                            decoder_ffn_dim=decoder_ffn_dim,
-                            encoder_layers=encoder_layers,
-                            encoder_attention_heads=encoder_attention_heads,
-                            encoder_ffn_dim=encoder_ffn_dim,
-                            max_position_embeddings=max_position_embeddings,
-                            pad_token_id=tokenizer.pad_token_id, 
+                            n_embd=n_embd,
+                            n_layer=n_layer,
+                            n_head=n_head,                            pad_token_id=tokenizer.pad_token_id, 
                             eos_token_id=tokenizer.eos_token_id, 
                             bos_token_id=tokenizer.bos_token_id, 
                             decoder_start_token_id=tokenizer.eos_token_id, 
-                            is_encoder_decoder=True, 
-                            forced_bos_token_id=tokenizer.bos_token_id, 
-                            forced_eos_token_id=tokenizer.eos_token_id, 
                             vocab_size=len(tokenizer),
                             )
 
     model = GPT2LMHeadModel(config=bartconfig)
     model.to(device)
 
-elif args.pre_trained_baseline:
-    from transformers import GPT2Config, GPT2LMHeadModel
-    tokenizer = GPT2Config.from_pretrained("gpt2")
-    model = GPT2LMHeadModel.from_pretrained("gpt2")
-    model.to(device)
-
 else:
-    from modeling_mc_with_gpt import GPT2LMHeadModel, GPT2Config
-    tokenizer = custom_tokenizer.get_tokenizer(tokenizer_path)
+    from modeling_mc_with_gpt import GPT2Config, GPT2LMHeadModel
+    tokenizer = AutoTokenizer.from_pretrained(tokenizer_path)
     print(len(tokenizer))
     if next_token_type == "new_token":
         tokenizer.add_tokens("<next>", special_tokens=True)
@@ -251,21 +225,12 @@ else:
     print(len(tokenizer))
 
     mixcoder_config = GPT2Config(n_layer=n_layer,
-                                    d_model=d_model,
-                                    decoder_layers=decoder_layers,
-                                    decoder_attention_heads=decoder_attention_heads,
-                                    decoder_ffn_dim=decoder_ffn_dim,
-                                    encoder_layers=encoder_layers,
-                                    encoder_attention_heads=encoder_attention_heads,
-                                    encoder_ffn_dim=encoder_ffn_dim,
-                                    max_position_embeddings=max_position_embeddings,
+                                    n_embd=n_embd,
+                                    n_layer=n_layer,
+                                    n_head=n_head,
                                     pad_token_id=tokenizer.pad_token_id, 
                                     eos_token_id=tokenizer.eos_token_id, 
                                     bos_token_id=tokenizer.bos_token_id, 
-                                    decoder_start_token_id=tokenizer.eos_token_id, 
-                                    is_encoder_decoder=True, 
-                                    forced_bos_token_id=tokenizer.bos_token_id, 
-                                    forced_eos_token_id=tokenizer.eos_token_id, 
                                     vocab_size=len(tokenizer),
                                     next_token_type=next_token_type,
                                     next_token_id=next_token_id,
@@ -290,9 +255,9 @@ print(model)
 with open(os.path.join(save_path, "model.txt"), "w", encoding="utf8") as f:
     f.write(str(model))
 
-train_dataset = custom_datasets.WmtDataset(dataset["train"], tokenizer=tokenizer, src_lang=args.src_lang, tgt_lang=args.tgt_lang)
-val_dataset = custom_datasets.WmtDataset(dataset["validation"], tokenizer=tokenizer, src_lang=args.src_lang, tgt_lang=args.tgt_lang)
-test_dataset = custom_datasets.WmtDataset(dataset["test"], tokenizer=tokenizer, src_lang=args.src_lang, tgt_lang=args.tgt_lang)
+train_dataset = custom_datasets.WmtDatasetForGPT(dataset["train"], tokenizer=tokenizer, src_lang=args.src_lang, tgt_lang=args.tgt_lang)
+val_dataset = custom_datasets.WmtDatasetForGPT(dataset["validation"], tokenizer=tokenizer, src_lang=args.src_lang, tgt_lang=args.tgt_lang)
+test_dataset = custom_datasets.WmtDatasetForGPT(dataset["test"], tokenizer=tokenizer, src_lang=args.src_lang, tgt_lang=args.tgt_lang)
 
 train_dataloader = torch.utils.data.DataLoader(train_dataset, batch_size=batch_size, collate_fn=train_dataset.collate_fn, num_workers=4, shuffle=True, drop_last=True)
 val_dataloader = torch.utils.data.DataLoader(val_dataset, batch_size=1, collate_fn=val_dataset.collate_fn, drop_last=True)
@@ -353,6 +318,7 @@ for E in range(epoch):
                     out = model(**batch)
                     pred = out.logits.argmax(dim=-1)
                     pred_str = tokenizer.batch_decode(pred, skip_special_tokens=True)
+                    print(pred_str)
 
                     refer = tokenizer.batch_decode(torch.where(batch["labels"] == -100, tokenizer.pad_token_id, batch["labels"]), skip_special_tokens=True)
                     refers.extend(refer)
