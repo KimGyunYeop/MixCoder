@@ -45,7 +45,7 @@ for i in tqdm(range(len(wmt14["train"]["translation"]))):
 
 from tokenizers.processors import TemplateProcessing
 old_tokenizer = AutoTokenizer.from_pretrained("gpt2")
-old_tokenizer.add_special_tokens({"sep_token": "<sep>"})
+old_tokenizer.add_special_tokens({"sep_token": "<sep>", "pad_token":"<pad>"})
 old_tokenizer._tokenizer.post_processor = TemplateProcessing(
     single=old_tokenizer.bos_token + " $A " + old_tokenizer.sep_token,
     pair = old_tokenizer.bos_token +" $A " + old_tokenizer.sep_token + " $B "+ old_tokenizer.eos_token,
