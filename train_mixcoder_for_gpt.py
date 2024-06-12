@@ -202,7 +202,6 @@ if args.baseline:
     tokenizer = custom_tokenizer.get_tokenizer(tokenizer_path)
     bartconfig = GPT2Config(n_layer=n_layer,
                             n_embd=n_embd,
-                            n_layer=n_layer,
                             n_head=n_head,                            
                             pad_token_id=tokenizer.pad_token_id, 
                             eos_token_id=tokenizer.eos_token_id, 
@@ -227,7 +226,6 @@ else:
 
     mixcoder_config = GPT2Config(n_layer=n_layer,
                                     n_embd=n_embd,
-                                    n_layer=n_layer,
                                     n_head=n_head,
                                     pad_token_id=tokenizer.pad_token_id, 
                                     eos_token_id=tokenizer.eos_token_id, 
