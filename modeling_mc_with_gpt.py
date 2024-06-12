@@ -1338,7 +1338,7 @@ class GPT2Model(GPT2PreTrainedModel):
 
         if self.config.next_token_type == "new_token":
             new_token_ids = torch.ones(inputs_embeds.size()[:-1], dtype=torch.long, device=inputs_embeds.device) * self.config.next_token_id
-            next_token_hidden_embeds = self.embed_tokens(new_token_ids) * self.embed_scale
+            next_token_hidden_embeds = self.wte(new_token_ids)
         elif self.config.next_token_type == "avg_prev_token":
             device = inputs_embeds.device
             next_token_mask = torch.zeros((input_shape[-1], input_shape[-1]), dtype=inputs_embeds.dtype, device=device)
