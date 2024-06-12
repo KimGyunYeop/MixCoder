@@ -66,7 +66,7 @@ class WmtDatasetForGPT(Dataset):
 
         # return {"input_ids": src_token["input_ids"], "attention_mask": src_token["attention_mask"], "decoder_input_ids": tgt_token["input_ids"], "decoder_attention_mask": tgt_token["attention_mask"], "labels": labels}
         
-        return {"labels": labels}
+        return {"input_ids": token["input_ids"], "attention_mask": token["attention_mask"], "labels": labels}
 
 class SummarizationDataset(Dataset):
     def __init__(self, dataset, tokenizer, src_lang="en", tgt_lang="de") -> None:
