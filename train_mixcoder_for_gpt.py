@@ -149,8 +149,8 @@ if args.base:
     n_layer=6
     n_head=12
 
-    save_path = os.path.join("results_base",f"{args.data_name}_{args.src_lang}-{args.tgt_lang}", save_path)
-    wandb.init(project=f"MixCoder_base_{args.data_name}_{args.subset}_{args.src_lang}-{args.tgt_lang}", name=save_path, config=vars(args))
+    save_path = os.path.join("results_base_gpt",f"{args.data_name}_{args.src_lang}-{args.tgt_lang}", save_path)
+    wandb.init(project=f"MixCoder_base_gpt_{args.data_name}_{args.subset}_{args.src_lang}-{args.tgt_lang}", name=save_path, config=vars(args))
 
 else:
     n_layer=6
@@ -158,8 +158,8 @@ else:
     n_layer=6
     n_head=8
 
-    save_path = os.path.join("results",f"{args.data_name}_{args.src_lang}-{args.tgt_lang}", save_path)
-    wandb.init(project=f"MixCoder_{args.data_name}_{args.subset}_{args.src_lang}-{args.tgt_lang}", name=save_path, config=vars(args))
+    save_path = os.path.join("results_gpt",f"{args.data_name}_{args.src_lang}-{args.tgt_lang}", save_path)
+    wandb.init(project=f"MixCoder_gpt_{args.data_name}_{args.subset}_{args.src_lang}-{args.tgt_lang}", name=save_path, config=vars(args))
 
 
 # if os.path.exists(save_path):
@@ -320,6 +320,7 @@ for E in range(epoch):
                     print(pred_str)
 
                     refer = tokenizer.batch_decode(torch.where(batch["labels"] == -100, tokenizer.pad_token_id, batch["labels"]), skip_special_tokens=True)
+                    print(refer)
                     refers.extend(refer)
                     preds.extend(pred_str)
 
