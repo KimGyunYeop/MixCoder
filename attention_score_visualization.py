@@ -26,9 +26,9 @@ args = argparser.parse_args()
 
 os.makedirs("figs", exist_ok=True)
 
-# args.save_path = "/home/nlplab/hdd1/gyop/research/GenrateFromCurrentPosition/results/wmt14_de-en/-avg_prev_token-share_att-indi_self_q-indi_self_out-share_cross_att-indi_cross_q-indi_cross_out-hidden_cross_att/1000000"
-args.save_path = "/home/nlplab/hdd1/gyop/research/GenrateFromCurrentPosition/results/wmt14_de-en/-new_token-share_att-indi_self_q-indi_self_out-share_cross_att-indi_cross_q-indi_cross_out-hidden_cross_att/700000"
-# args.save_path = "/home/nlplab/hdd1/gyop/research/GenrateFromCurrentPosition/results/wmt14_de-en/baseline-/1000000"
+# args.save_path = "/home/nlplab/hdd1/gyop/research/GenrateFromCurrentPosition/results_base/wmt14_de-en/-avg_prev_token-share_att-indi_self_q-indi_self_out-share_cross_att-indi_cross_q-indi_cross_out-hidden_cross_att/1000000"
+# args.save_path = "/home/nlplab/hdd1/gyop/research/GenrateFromCurrentPosition/results_base/wmt14_de-en/-new_token-share_att-indi_self_q-indi_self_out-share_cross_att-indi_cross_q-indi_cross_out-hidden_cross_att/1000000"
+args.save_path = "/home/nlplab/hdd1/gyop/research/GenrateFromCurrentPosition/results_base/wmt14_de-en/baseline-/1000000"
 # "facebook/bart-base", "t5-base", "gpt2", "meta-llama/Meta-Llama-3-8B", "lucadiliello/bart-small"
 # args.save_path = "lucadiliello/bart-small"
 
@@ -59,9 +59,20 @@ else:
 if "gpt2" in args.save_path:
     tokenizer.pad_token = tokenizer.eos_token
 
-print(sum(p.numel() for p in model.parameters()))
-print(model.num_parameters(only_trainable=True, exclude_embeddings=True))
+def get_unique_parameters(model):
+    seen = set()
+    unique_parameters = []
+
+    for name, param in model.named_parameters():
+        if id(param) not in seen:
+            seen.add(id(param))
+            unique_parameters.append(param)
+
+    return unique_parameters
+
 print(summary(model))
+print("all paramter :", sum(p.numel() for p in model.parameters()))
+print("shared paramter :",sum(p.numel() for p in get_unique_parameters(model)))
 
 test_dataset = custom_datasets.WmtDataset(dataset, tokenizer=tokenizer, src_lang=args.src_lang, tgt_lang=args.tgt_lang)
 test_dataloader = torch.utils.data.DataLoader(test_dataset, batch_size=1, collate_fn=test_dataset.collate_fn)

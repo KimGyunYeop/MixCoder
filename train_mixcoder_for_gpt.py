@@ -1,6 +1,6 @@
 import datasets
 # from transformers import BartModel, BartConfig, BartForConditionalGeneration, BertModel
-from transformers import AdamW, get_scheduler, AutoTokenizer
+from transformers import AdamW, get_scheduler, AutoTokenizer, DataCollatorForLanguageModeling
 import torch
 from datasets import load_dataset
 import custom_datasets
