@@ -55,7 +55,7 @@ class WmtDatasetForGPT(Dataset):
         src = [item[self.src_lang] for item in batch]
         tgt = [item[self.tgt_lang] for item in batch]
 
-        token = self.tokenizer(src, tgt, return_tensors="pt", padding=True, truncation=True, max_length=500, add_special_tokens=True)
+        token = self.tokenizer(src, tgt, return_tensors="pt", padding=True, truncation=True, max_length=500)
 
         labels = torch.where(token["input_ids"] == self.tokenizer.pad_token_id, -100, token["input_ids"])
         
