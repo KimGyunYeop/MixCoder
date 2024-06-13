@@ -28,35 +28,15 @@ def set_seed(seed):
     torch.backends.cudnn.benchmark = False
 
 argparser = argparse.ArgumentParser()
-argparser.add_argument("--next_token_type", type=str, default="avg_prev_token", choices=["new_token", "avg_prev_token"])
-argparser.add_argument("--share_self_attention_module", default=False, action="store_true")
-argparser.add_argument("--indi_self_q", default=False, action="store_true")
-argparser.add_argument("--indi_self_out", default=False, action="store_true")
-argparser.add_argument("--share_cross_attention_module", default=False, action="store_true")
-argparser.add_argument("--indi_cross_q", default=False, action="store_true")
-argparser.add_argument("--indi_cross_out", default=False, action="store_true")
-argparser.add_argument("--pass_hidden_to_cross_att", default=False, action="store_true")
-argparser.add_argument("--share_ffnn", default=False, action="store_true")
-
-argparser.add_argument("--data_name", type=str, default="wmt14")
-argparser.add_argument("--subset", type=str, default="de-en")
-argparser.add_argument("--src_lang", type=str, default="en")
-argparser.add_argument("--tgt_lang", type=str, default="de")
-argparser.add_argument("--batch_size", type=int, default=16)
-argparser.add_argument("--tokenizer_path", type=str, default="tokenizer/wmt14_de-en_BPEtokenizer.json")
 argparser.add_argument("--gpu", type=int, default=0)
-argparser.add_argument("--learning_rate", type=float, default=5e-5)
-argparser.add_argument("--epoch", type=int, default=10)
-argparser.add_argument("--full_step", type=int, default=1000010)
-argparser.add_argument("--eval_step", type=int, default=50000)
 argparser.add_argument("--save_path", type=str, default="")
-argparser.add_argument("--baseline", default=False, action="store_true")
-argparser.add_argument("--pre_trained_baseline", default=False, action="store_true")
-argparser.add_argument("--max_norm", type=float, default=1.0)
-argparser.add_argument("--seed", type=int, default=42)
-argparser.add_argument("--logging_step", type=int, default=1000)
 
-args = argparser.parse_args()
+tmp_args = argparser.parse_args()
+
+args = argparse.Namespace(json.load(open(os.path.join(tmp_args.save_path+"/..", "args.json"), "r", encoding="utf8")))
+args.gpu = tmp_args.gpu
+args.save_path = tmp_args.save_path
+
 set_seed(args.seed)
 
 data_name = args.data_name
