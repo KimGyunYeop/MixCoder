@@ -32,7 +32,7 @@ argparser.add_argument("--save_path", type=str, default="")
 
 tmp_args = argparser.parse_args()
 
-args = argparse.Namespace(json.load(open(os.path.join(tmp_args.save_path+"/..", "args.json"), "r", encoding="utf8")))
+args = argparse.Namespace(**json.load(open(os.path.join(tmp_args.save_path+"/..", "args.json"), "r", encoding="utf8")))
 args.gpu = tmp_args.gpu
 args.save_path = tmp_args.save_path
 set_seed(args.seed)
