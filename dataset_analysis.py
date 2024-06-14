@@ -15,6 +15,11 @@ print(dataset_en_fr['train'][0])  # Show the first sample from the EN-FR train s
 print(dataset_en_ro['train'][0])  # Show the first sample from the EN-RO train set
 print(dataset_xsum['train'][0])  # Show the first sample from the XSum train set
 
+print(dataset_en_de)
+print(dataset_en_fr)
+print(dataset_en_ro)
+print(dataset_xsum)
+
 def calculate_average_word_count(dataset, src_lang, tgt_lang, split='train'):
     source_word_counts = []
     target_word_counts = []
@@ -33,11 +38,31 @@ def calculate_average_word_count(dataset, src_lang, tgt_lang, split='train'):
     average_target = sum(target_word_counts) / len(target_word_counts)
 
     return average_source, average_target
+
+def calculate_average_length_xsum(dataset, src_lang, tgt_lang, split='train'):
+    document_lengths = []
+    summary_lengths = []
+
+    # Iterate through each example in the dataset
+    for example in dataset[split]:
+        # Split the document and summary into words and count them
+        document_words = len(example[src_lang].split())
+        summary_words = len(example[tgt_lang].split())
+        
+        document_lengths.append(document_words)
+        summary_lengths.append(summary_words)
+
+    # Calculate the average lengths
+    average_document_length = sum(document_lengths) / len(document_lengths)
+    average_summary_length = sum(summary_lengths) / len(summary_lengths)
+
+    return average_document_length, average_summary_length
+
 # Calculate and print averages for each dataset
 avg_en_de = calculate_average_word_count(dataset_en_de, "en", "de")
 avg_en_fr = calculate_average_word_count(dataset_en_fr, "en", "fr")
 avg_en_ro = calculate_average_word_count(dataset_en_ro, "en", "ro")
-avg_xsum = calculate_average_word_count(dataset_xsum, "document", "summary")
+avg_xsum = calculate_average_length_xsum(dataset_xsum, "document", "summary")
 
 print(f'Average Source and Target Word Counts for EN-DE: {avg_en_de}')
 print(f'Average Source and Target Word Counts for EN-FR: {avg_en_fr}')

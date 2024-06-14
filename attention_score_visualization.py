@@ -15,11 +15,11 @@ import json
 
 os.makedirs("figs", exist_ok=True)
 
-# save_path = "/home/nlplab/hdd1/gyop/research/GenrateFromCurrentPosition/results_base/wmt14_de-en/-avg_prev_token-share_att-indi_self_q-indi_self_out-share_cross_att-indi_cross_q-indi_cross_out-hidden_cross_att/1000000"
+save_path = "/home/nlplab/hdd1/gyop/research/GenrateFromCurrentPosition/results_base/wmt14_de-en/-avg_prev_token-share_att-indi_self_q-indi_self_out-share_cross_att-indi_cross_q-indi_cross_out-hidden_cross_att/1000000"
 # save_path = "/home/nlplab/hdd1/gyop/research/GenrateFromCurrentPosition/results_base/wmt14_de-en/-new_token-share_att-indi_self_q-indi_self_out-share_cross_att-indi_cross_q-indi_cross_out-hidden_cross_att/1000000"
-save_path = "/home/nlplab/hdd1/gyop/research/GenrateFromCurrentPosition/results_base/wmt14_de-en/baseline-/1000000"
+# save_path = "/home/nlplab/hdd1/gyop/research/GenrateFromCurrentPosition/results_base/wmt14_de-en/baseline-/1000000"
 # "facebook/bart-base", "t5-base", "gpt2", "meta-llama/Meta-Llama-3-8B", "lucadiliello/bart-small"
-# save_path = "lucadiliello/bart-small"
+# save_path = "facebook/bart-base"
 
 args = argparse.Namespace(**json.load(open(f"{save_path}/../args.json", "r")))
 args.save_path = save_path
