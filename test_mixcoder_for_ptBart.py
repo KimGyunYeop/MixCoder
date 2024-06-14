@@ -110,12 +110,11 @@ save_path = args.save_path
 
 # wmt 14 train bart model
 dataset = load_dataset(data_name, subset)
-print("before filtering:")
-print(dataset)
+# print("before filtering:")
+# print(dataset)
 
 dataset["test"] = dataset["test"].filter(lambda x: len(x["translation"][args.src_lang]) < 1024 and len(x["translation"][args.tgt_lang]) < 1024)
-print("after filtering:")
-print(dataset)
+# print("after filtering:")
 
 pre_train_path = "facebook/bart-base"
 
@@ -141,7 +140,7 @@ else:
     print("load_pre trained model")
     model = BartForConditionalGeneration.from_pretrained(save_path, local_files_only=True)
 
-    print(model.config)
+    # print(model.config)
 
     # if args.copy_qo:
     #     print("copy qo")
@@ -152,9 +151,7 @@ else:
 
     model.to(device)
 
-
-
-print(model)
+# print(model)
 
 # train_dataset = custom_datasets.WmtDataset(dataset["train"], tokenizer=tokenizer, src_lang=args.src_lang, tgt_lang=args.tgt_lang)
 # val_dataset = custom_datasets.WmtDataset(dataset["validation"], tokenizer=tokenizer, src_lang=args.src_lang, tgt_lang=args.tgt_lang)
@@ -180,9 +177,9 @@ with torch.no_grad():
             batch[i] = batch[i].to(device)
 
         out = model.generate(input_ids=batch["input_ids"], attention_mask=batch["attention_mask"], use_cache=False, num_beams=5, do_sample=True, max_new_tokens=512)
-        print(out)
+        # print(out)
         pred_str = tokenizer.batch_decode(out, skip_special_tokens=True)
-        print(pred_str)
+        # print(pred_str)
         # out = model.generate(input_ids=batch["input_ids"], attention_mask=batch["attention_mask"], use_cache=True)
         # print(out)
         # # out = model(**batch)
@@ -193,7 +190,7 @@ with torch.no_grad():
         refer = tokenizer.batch_decode(torch.where(batch["labels"] == -100, tokenizer.pad_token_id, batch["labels"]), skip_special_tokens=True)
         refers.extend(refer)
         preds.extend(pred_str)
-        print(refer, "\n\n\n")
+        # print(refer, "\n\n\n")
 
         matric_scarebleu.add_batch(predictions=pred_str, references=refer)
         matric_bleu.add_batch(predictions=pred_str, references=refer)
@@ -203,6 +200,7 @@ with torch.no_grad():
 
     # matric.add_batch(predictions=preds, references=refers)
     # matric_result=matric_scarebleu.compute(predictions=preds, references=refers)
+    print(save_path)
     matric_scarebleu_result = matric_scarebleu.compute()
     print(matric_scarebleu_result)
     matric_bleu_result = matric_bleu.compute()
